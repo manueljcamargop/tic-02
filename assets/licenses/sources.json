@@ -1,0 +1,37 @@
+[
+  {
+    "file": "kick.wav",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/virtuosity_drums/9f04cf9a734527edfbb0a4eee1f674e45bbf71bc/Samples/mid/kick/mid_kick_snoff_vl3_rr1.flac",
+    "license": "CC0-1.0",
+    "sha256_original": "f25318f16ca4e74f5575c275a24f92a7579acb8d69a078ed7db325ef483dd5ca",
+    "processing": "Mono PCM 16-bit 44.1 kHz; leading silence trimmed, level matched, tail limited to 2 s with 50 ms fade."
+  },
+  {
+    "file": "snare.wav",
+    "source": "https://raw.githubusercontent.com/sfzinstruments/virtuosity_drums/9f04cf9a734527edfbb0a4eee1f674e45bbf71bc/Samples/mid/snare/mid_snare_center_vl7.flac",
+    "license": "CC0-1.0",
+    "sha256_original": "631e2cec78d03e4a5fc5038ac4e6f42bd496fd801dafdfa04218ffcce271a65d",
+    "processing": "Mono PCM 16-bit 44.1 kHz; leading silence trimmed, level matched, tail limited to 2 s with 50 ms fade."
+  },
+  {
+    "file": "clap.wav",
+    "source": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Claps/SoloClap_vl3.wav",
+    "license": "CC0-1.0",
+    "sha256_original": "03dc4fa78deabcbfa0972accf45e538b25b69526e69fad6a81b48ca508caeb63",
+    "processing": "Mono PCM 16-bit 44.1 kHz; leading silence trimmed, level matched, tail limited to 2 s with 50 ms fade."
+  },
+  {
+    "file": "marimba-c.wav",
+    "source": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Marimba/Marimba_hit_Outrigger_C4_med_01.wav",
+    "license": "CC0-1.0",
+    "sha256_original": "3e88c006eef05e8f7891f8f6027042006199a4ec3b53a0ad7308f9782a52d4df",
+    "processing": "Mono PCM 16-bit 44.1 kHz; leading silence trimmed, level matched, tail limited to 2 s with 50 ms fade."
+  },
+  {
+    "file": "marimba-g.wav",
+    "source": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Marimba/Marimba_hit_Outrigger_G4_med_01.wav",
+    "license": "CC0-1.0",
+    "sha256_original": "278e738d8214cdc192e63c3350b1e464a72c86dc135ddf0c5ce035569be66c71",
+    "processing": "Mono PCM 16-bit 44.1 kHz; leading silence trimmed, level matched, tail limited to 2 s with 50 ms fade."
+  }
+]
