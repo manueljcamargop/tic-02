@@ -17,7 +17,7 @@
   ];
   const FILES = {
     kick: "kick-pop.wav",
-    snare: "snare.wav",
+    snare: "snare-pop.wav",
     hat: "hat.wav",
     clave: "clave.wav", claveHi: "clave-hi.wav",
     marimba: "marimba-c.wav",
