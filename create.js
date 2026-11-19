@@ -16,9 +16,11 @@
     { key: "clap", name: "Palmas", hint: "palmas" },
   ];
   const FILES = {
-    kick: "kick.wav",
+    kick: "kick-pop.wav",
     snare: "snare.wav",
-    clap: "clap.wav",
+    clap1: "clap-rr1.wav", clap2: "clap-rr2.wav", clap3: "clap-rr3.wav",
+    clap4: "clap-rr4.wav", clap5: "clap-rr5.wav", clap6: "clap-rr6.wav",
+    clave: "clave.wav", claveHi: "clave-hi.wav",
     marimba: "marimba-c.wav",
     marimbaG: "marimba-g.wav",
   };
@@ -32,7 +34,7 @@
   const melodyNotes = (p) => (p.melody || []).filter((n) => n !== null && n !== undefined);
   const RETOS = [
     {
-      id: "cr1", group: 0, type: "rhythm", rows: ["clap"], steps: 8, tempo: 80,
+      id: "cr1", group: 0, type: "rhythm", rows: ["clap"], steps: 16, tempo: 80,
       title: "Mi patrón de palmas",
       objective: "Crear un patrón rítmico corto que otra persona pueda escuchar y repetir con palmas.",
       instruction: "Toca los cuadros para poner palmas. Escucha tu patrón y cámbialo hasta que te guste. Debe poder repetirse con las manos.",
@@ -40,7 +42,7 @@
         const n = count(p.clap || []);
         return [
           { text: "Pon entre 3 y 6 palmas", ok: n >= 3 && n <= 6 },
-          { text: "Deja algunos cuadros vacíos", ok: n > 0 && n < 8 },
+          { text: "Deja algunos cuadros vacíos", ok: n > 0 && n < 16 },
           { text: "Pon una palma en el cuadro del número 1", ok: !!(p.clap || [])[0] },
         ];
       },
@@ -48,7 +50,7 @@
       guide: "Pide que primero lo escuche completo. Pregunta: «¿lo puedes aplaudir tú?». Si no puede, invita a quitar un golpe. No corrijas el gusto: acompaña la decisión.",
     },
     {
-      id: "cr2", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 8, tempo: 84,
+      id: "cr2", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 16, tempo: 84,
       title: "Tres sonidos",
       objective: "Combinar tres timbres de percusión en un mismo patrón y distinguir su función.",
       instruction: "Ahora tienes bombo, caja y palmas. Usa los tres sonidos en tu patrón. Escucha qué cambia cuando mueves un golpe de lugar.",
@@ -62,13 +64,13 @@
       guide: "Antes de crear, que escuche cada sonido por separado tocando un cuadro. Pregunta: «¿cuál suena más grave?, ¿dónde lo pondrías?». Puede representar cada sonido con un gesto.",
     },
     {
-      id: "cr3", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 16, tempo: 88,
+      id: "cr3", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 32, tempo: 84,
       title: "Pregunta y respuesta",
       objective: "Construir dos frases rítmicas relacionadas: la segunda responde a la primera.",
       instruction: "Tu creación tiene dos partes. Crea una «pregunta» en la parte 1 y una «respuesta» en la parte 2: parecida, pero no igual.",
       checks: (p) => {
         const rows = rhythm(p, ["kick", "snare", "clap"]);
-        const half = (h) => rows.map((r) => r.slice(h * 8, h * 8 + 8));
+        const half = (h) => rows.map((r) => r.slice(h * 16, h * 16 + 16));
         const a = JSON.stringify(half(0).map((r) => r.map(Boolean)));
         const b = JSON.stringify(half(1).map((r) => r.map(Boolean)));
         return [
@@ -81,7 +83,7 @@
       guide: "Una estrategia: copiar la pregunta en la parte 2 y cambiar solo uno o dos golpes. Pide que lo diga con palabras: «mi respuesta cambia al final».",
     },
     {
-      id: "cm1", group: 1, type: "melody", notes: [0, 1, 2], steps: 8, tempo: 76,
+      id: "cm1", group: 1, type: "melody", notes: [0, 1, 2], steps: 16, tempo: 72,
       title: "Tres notas",
       objective: "Crear una melodía breve con tres alturas y cantarla.",
       instruction: "Usa solo Do, Re y Mi. Toca un cuadro para poner una nota; tócalo otra vez para quitarla. Después canta tu melodía.",
@@ -97,7 +99,7 @@
       guide: "Canta con él la primera vez. Si cantar le da pena, puede tararear o señalar con la mano la altura. Acepta otra octava.",
     },
     {
-      id: "cm2", group: 1, type: "melody", notes: [0, 1, 2, 3, 4], steps: 8, tempo: 80,
+      id: "cm2", group: 1, type: "melody", notes: [0, 1, 2, 3, 4], steps: 16, tempo: 76,
       title: "Sube y baja",
       objective: "Dar forma al contorno de una melodía pentatónica: que suba y baje.",
       instruction: "Ahora tienes cinco notas. Crea una melodía que suba y luego baje, como una montaña o una ola. Dibuja el camino con tu mano mientras suena.",
@@ -115,7 +117,7 @@
       guide: "Pregunta antes de escuchar: «¿cómo crees que va a sonar?». Después compara. La cuadrícula ayuda: arriba es más agudo.",
     },
     {
-      id: "cm3", group: 1, type: "melody", notes: [0, 1, 2, 3, 4, 5], steps: 16, tempo: 84,
+      id: "cm3", group: 1, type: "melody", notes: [0, 1, 2, 3, 4, 5], steps: 32, tempo: 76,
       title: "Melodía con final",
       objective: "Crear una melodía de dos frases con un silencio que respira y un final que suena a cierre.",
       instruction: "Crea una melodía larga en dos partes. Deja al menos un silencio para respirar y termina en Do (grave o agudo) para que suene a final.",
@@ -126,7 +128,7 @@
         const rest = m.slice(0, last).some((x) => x === null || x === undefined);
         return [
           { text: "Pon al menos 8 notas", ok: n.length >= 8 },
-          { text: "Pon notas en la parte 1 y en la parte 2", ok: m.slice(0, 8).some((x) => x !== null && x !== undefined) && m.slice(8).some((x) => x !== null && x !== undefined) },
+          { text: "Pon notas en la parte 1 y en la parte 2", ok: m.slice(0, 16).some((x) => x !== null && x !== undefined) && m.slice(16).some((x) => x !== null && x !== undefined) },
           { text: "Deja al menos un cuadro vacío en medio de la melodía", ok: n.length > 0 && rest },
           { text: "La última nota es Do (abajo o arriba)", ok: n.length > 0 && (n[n.length - 1] === 0 || n[n.length - 1] === 5) },
         ];
@@ -164,9 +166,13 @@
       const p = c.pattern || {};
       if (r.type === "rhythm") {
         for (const k of r.rows)
-          if (Array.isArray(p[k])) o.pattern[k] = o.pattern[k].map((_, i) => p[k][i] === true);
+          if (Array.isArray(p[k])) {
+            const f = p[k].length * 2 === r.steps ? 2 : 1;
+            o.pattern[k] = o.pattern[k].map((_, i) => i % f === 0 && p[k][i / f] === true);
+          }
       } else if (Array.isArray(p.melody)) {
-        o.pattern.melody = o.pattern.melody.map((_, i) => (Number.isInteger(p.melody[i]) && r.notes.includes(p.melody[i]) ? p.melody[i] : null));
+        const f = p.melody.length * 2 === r.steps ? 2 : 1;
+        o.pattern.melody = o.pattern.melody.map((_, i) => { const v = i % f === 0 ? p.melody[i / f] : null; return Number.isInteger(v) && r.notes.includes(v) ? v : null; });
       }
       if (Number.isFinite(c.tempo)) o.tempo = Math.min(120, Math.max(60, Math.round(c.tempo)));
       o.title = txt(c.title, 80);
@@ -202,7 +208,7 @@
     return "| " + groups.join(" | ") + " |";
   }
   // --- audio ---
-  let ctx = null, master = null, buffers = {}, loading = null, player = null, loopOn = false, metroOn = false;
+  let clapRR = 0, ctx = null, master = null, buffers = {}, loading = null, player = null, loopOn = false, metroOn = false;
   function decode(ab) {
     return new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
   }
@@ -233,6 +239,7 @@
     master.gain.value = (state.volume ?? 65) / 100;
   }
   function hit(c, dest, key, rate, time, gain) {
+    if (key === "clap") key = "clap" + ((clapRR++ % 6) + 1);
     const src = c.createBufferSource();
     src.buffer = buffers[key];
     src.playbackRate.value = rate || 1;
@@ -250,14 +257,7 @@
     }
   }
   function click(c, dest, time, accent) {
-    const o = c.createOscillator(), g = c.createGain();
-    o.type = "square";
-    o.frequency.value = accent ? 1760 : 1175;
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.exponentialRampToValueAtTime(accent ? 0.35 : 0.22, time + 0.002);
-    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.045);
-    o.connect(g); g.connect(dest);
-    o.start(time); o.stop(time + 0.06);
+    hit(c, dest, accent ? "claveHi" : "clave", 1, time, accent ? 0.75 : 0.5);
   }
   async function preview(r, key, rate) {
     try { await ensureAudio(); hit(ctx, master, key, rate, ctx.currentTime + 0.01, 0.9); } catch (e) {}
@@ -283,7 +283,7 @@
     }
     const loop = loopOn;
     const gap = document.getElementById("seq-gap").checked;
-    const stepDur = 60 / c.tempo / 2;
+    const stepDur = 60 / c.tempo / 4;
     const cycle = r.steps * (gap ? 2 : 1);
     const p = { r, c, start: ctx.currentTime + 0.08, next: 0, stepDur, cycle, loop, gap };
     player = p;
@@ -293,7 +293,7 @@
         if (!p.loop && p.next >= p.cycle) break;
         const when = p.start + p.next * p.stepDur;
         if (pos < r.steps) scheduleStep(ctx, master, r, c.pattern, pos, when);
-        if (metroOn && pos % 2 === 0) click(ctx, master, when, (pos % r.steps) % 8 === 0);
+        if (metroOn && pos % 4 === 0) click(ctx, master, when, (pos % r.steps) % 16 === 0);
         p.next++;
       }
     };
@@ -338,7 +338,7 @@
     if (notesUsed(r, c) === 0) { toast("Todavía no hay sonidos para descargar."); return; }
     try {
       await ensureAudio();
-      const stepDur = 60 / c.tempo / 2, rate = 44100;
+      const stepDur = 60 / c.tempo / 4, rate = 44100;
       const gap = document.getElementById("seq-gap").checked;
       const total = r.steps * stepDur * (gap ? 2 : 1) + 1.2;
       const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
@@ -366,18 +366,18 @@
   }
   function grid(r, c) {
     const cols = [...Array(r.steps).keys()];
-    const header = `<div class="seq-row seq-head"><span class="seq-label"></span>${cols.map((i) => `<span class="seq-num ${i % 4 === 0 ? "beat" : ""}">${i % 2 === 0 ? i / 2 + 1 : "·"}</span>`).join("")}</div>`;
+    const header = `<div class="seq-row seq-head"><span class="seq-label"></span>${cols.map((i) => `<span class="seq-num ${i % 4 === 0 ? "beat" : ""}">${i % 4 === 0 ? (i % 16) / 4 + 1 : "·"}</span>`).join("")}</div>`;
     let rows;
     if (r.type === "rhythm") {
       rows = r.rows.map((k) => {
         const d = DRUMS.find((x) => x.key === k);
-        return `<div class="seq-row" data-row="${k}"><button type="button" class="seq-label seq-preview" data-preview="${k}" title="Escuchar ${d.name}">${d.name}<small>${d.hint}</small></button>${cols.map((i) => `<button type="button" class="seq-cell seq-col drum-${k} ${i % 4 === 0 ? "beat" : ""} ${r.steps === 16 && i === 8 ? "half" : ""}" data-step="${i}" data-k="${k}" aria-pressed="${c.pattern[k][i]}" aria-label="${d.name}, paso ${i + 1}"></button>`).join("")}</div>`;
+        return `<div class="seq-row" data-row="${k}"><button type="button" class="seq-label seq-preview" data-preview="${k}" title="Escuchar ${d.name}">${d.name}<small>${d.hint}</small></button>${cols.map((i) => `<button type="button" class="seq-cell seq-col drum-${k} ${i % 4 === 0 ? "beat" : ""} ${r.steps === 32 && i === 16 ? "half" : ""}" data-step="${i}" data-k="${k}" aria-pressed="${c.pattern[k][i]}" aria-label="${d.name}, paso ${i + 1}"></button>`).join("")}</div>`;
       });
     } else {
-      rows = [...r.notes].reverse().map((n) => `<div class="seq-row" data-row="${n}"><button type="button" class="seq-label seq-preview note-${n}" data-preview-note="${n}" title="Escuchar ${NOTES[n].name}">${NOTES[n].name}</button>${cols.map((i) => `<button type="button" class="seq-cell seq-col note-${n} ${i % 4 === 0 ? "beat" : ""} ${r.steps === 16 && i === 8 ? "half" : ""}" data-step="${i}" data-n="${n}" aria-pressed="${c.pattern.melody[i] === n}" aria-label="${NOTES[n].name}, paso ${i + 1}"></button>`).join("")}</div>`);
+      rows = [...r.notes].reverse().map((n) => `<div class="seq-row" data-row="${n}"><button type="button" class="seq-label seq-preview note-${n}" data-preview-note="${n}" title="Escuchar ${NOTES[n].name}">${NOTES[n].name}</button>${cols.map((i) => `<button type="button" class="seq-cell seq-col note-${n} ${i % 4 === 0 ? "beat" : ""} ${r.steps === 32 && i === 16 ? "half" : ""}" data-step="${i}" data-n="${n}" aria-pressed="${c.pattern.melody[i] === n}" aria-label="${NOTES[n].name}, paso ${i + 1}"></button>`).join("")}</div>`);
     }
-    const parts = r.steps === 16 ? `<div class="seq-parts" aria-hidden="true"><span>Parte 1 · pregunta</span><span>Parte 2 · respuesta</span></div>` : "";
-    return `<div class="seq-wrap"><div class="seq ${r.type}" style="--steps:${r.steps}" role="group" aria-label="Cuadrícula de creación: ${r.steps} pasos">${parts}${header}${rows.join("")}</div></div>`;
+    const parts = r.steps === 32 ? `<div class="seq-parts" aria-hidden="true"><span>Parte 1 · pregunta</span><span>Parte 2 · respuesta</span></div>` : "";
+    return `<div class="seq-wrap"><div class="seq ${r.type}" style="--steps:${r.steps}" data-steps="${r.steps}" role="group" aria-label="Cuadrícula de creación: ${r.steps} pasos">${parts}${header}${rows.join("")}</div></div>`;
   }
   function checksMarkup(r, c) {
     return r.checks(c.pattern).map((x) => `<li class="${x.ok ? "ok" : ""}"><span aria-hidden="true">${x.ok ? "✓" : "○"}</span>${x.text}<span class="sr-only">${x.ok ? " · conseguido" : " · pendiente"}</span></li>`).join("");

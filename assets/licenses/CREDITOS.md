@@ -16,3 +16,10 @@ Conversión a WAV PCM mono, 16 bit, 44.1 kHz. Recorte del silencio inicial con u
 Las frases están renderizadas completas: la separación entre ataques depende de la línea de tiempo de audio, no de temporizadores de la interfaz. El indicador de pulsos es orientador y no sustituye la escucha. Se evita reproducción automática y se detiene el sonido al cambiar de vista o abrir el registro docente. El bucle es opcional y se desactiva al abrir otro ejercicio. Para imitación de memoria, el docente debe detener el bucle antes de la respuesta.
 
 La reproducción de bucles en controles HTML nativos puede variar ligeramente entre navegadores y dispositivos. Los ejercicios son frases cortas; la respuesta se realiza después de la escucha. Es recomendable comprobar el resultado en los altavoces o audífonos que se utilizarán en la práctica.
+
+## Sonidos de «Crea tu música»
+
+- **Bombo pop (`kick-pop.wav`):** derivado del kick de Virtuosity Drums indicado arriba. Procesado: filtro pasa-altos a 32 Hz, recorte de medios (−9 dB en 420 Hz y −4 dB en 250 Hz), realce de graves (+5 dB, estante en 65 Hz) y de ataque (+4 dB en 3,8 kHz), y envolvente corta (cola de unos 0,12 s) para un sonido seco.
+- **Palmas (`clap-rr1.wav` a `clap-rr6.wav`):** VCSL, `Idiophones/Struck Idiophones/Claps/Clap_rr1.wav` a `Clap_rr6.wav`. Se alternan en cada golpe para un sonido más natural.
+- **Metrónomo (`clave.wav`, `clave-hi.wav`):** claves de madera de VCSL, `Claves1_Hit_v2_rr1_Mid.wav` (tiempos) y `Claves1_Hit_v3_rr1_Mid.wav` (primer tiempo del compás).
+- Conversión a WAV PCM mono, 16 bit, 44,1 kHz, recorte del silencio inicial y fundido final. Licencia CC0. Las mismas muestras van incrustadas en `assets/audio/samples.js`.

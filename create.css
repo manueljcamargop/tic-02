@@ -87,3 +87,12 @@
 #create-view .hints li{font-size:16px;color:#c3cfe0}
 #create-view .hints li.ok{color:var(--ink)}
 #create-view .audio-status{font-size:15px;color:#d3ddec}
+/* Semicorcheas: 16 o 32 pasos */
+.seq[data-steps="16"] .seq-row{grid-template-columns:92px repeat(16,minmax(30px,1fr));gap:5px}
+.seq[data-steps="32"] .seq-row{grid-template-columns:86px repeat(32,minmax(18px,1fr));gap:2px}
+.seq[data-steps="32"] .seq-parts{grid-template-columns:86px 1fr 1fr;gap:2px}
+.seq[data-steps="32"] .seq-cell{min-width:18px;border-radius:5px}
+.seq[data-steps="32"] .seq-cell.half{margin-left:8px}
+.seq-cell.beat{border-left:2px solid #5d6f8f}
+.seq-num{align-self:end}
+@media (max-width:700px){.seq[data-steps="16"] .seq-row{grid-template-columns:74px repeat(16,30px)}.seq[data-steps="32"] .seq-row{grid-template-columns:74px repeat(32,26px)}.seq[data-steps="32"] .seq-parts{grid-template-columns:74px 1fr 1fr}}
