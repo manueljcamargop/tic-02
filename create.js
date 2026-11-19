@@ -105,10 +105,10 @@
         const strong = syl[tonic] || "";
         const onTonic = syl.length > 0 && snares.length === 1 && hits[tonic] && hits[tonic].snare;
         return [
-          { text: "Escribe tu palabra arriba", ok: syl.length > 0 },
-          { text: syl.length ? `Un golpe por sílaba: ${syl.join("-")} = ${syl.length}` : "Un golpe por sílaba", ok: syl.length > 0 && hits.length === syl.length },
-          { text: strong ? `La caja suena solo en la sílaba fuerte: «${strong.toUpperCase()}»` : "La caja suena solo en la sílaba fuerte", ok: !!onTonic },
-          { text: "La sílaba fuerte cae en un número (un tiempo)", ok: !!onTonic && hits[tonic].step % 4 === 0 },
+          { text: "Escribe tu palabra", ok: syl.length > 0 },
+          { text: syl.length ? `Pon un golpe por cada sílaba (${syl.join("-")} = ${syl.length} golpes)` : "Pon un golpe por cada sílaba", ok: syl.length > 0 && hits.length === syl.length },
+          { text: strong ? `La caja va en la sílaba morada: ${strong.toUpperCase()}` : "La caja va en la sílaba morada", ok: !!onTonic },
+          { text: "La caja va en un cuadro con número", ok: !!onTonic && hits[tonic].step % 4 === 0 },
         ];
       },
       observe: "Si dice la palabra con un pulso estable, si identifica la sílaba fuerte (acento prosódico) y si la hace coincidir con un tiempo del compás, como ocurre al cantar.",
@@ -455,7 +455,7 @@
   function chips(c) {
     const { syl, tonic, auto } = wordInfo(c);
     if (!syl.length) return '<span class="syl-hint">Escribe una palabra para ver sus sílabas.</span>';
-    return syl.map((x, i) => `<button type="button" class="syl-chip ${i === tonic ? "tonic" : ""}" data-syl="${i}" aria-pressed="${i === tonic}" title="Marcar «${escapeHTML(x)}» como sílaba fuerte">${escapeHTML(i === tonic ? x.toUpperCase() : x)}</button>`).join('<span class="syl-dash" aria-hidden="true">-</span>') + `<span class="syl-hint">${tonic === auto ? "Sílaba fuerte propuesta por la app. Si se pronuncia distinto, toca la correcta." : "Sílaba fuerte elegida por el profesor."}</span>`;
+    return syl.map((x, i) => `<button type="button" class="syl-chip ${i === tonic ? "tonic" : ""}" data-syl="${i}" aria-pressed="${i === tonic}" title="Marcar «${escapeHTML(x)}» como sílaba fuerte">${escapeHTML(i === tonic ? x.toUpperCase() : x)}</button>`).join('<span class="syl-dash" aria-hidden="true">-</span>') + `<span class="syl-hint">${tonic === auto ? "La sílaba morada es la que suena más fuerte. Profe: si se dice distinto, toca la correcta." : "Sílaba fuerte elegida por el profe."}</span>`;
   }
   function hitLabels(r, c) {
     if (!r.word) return "";
