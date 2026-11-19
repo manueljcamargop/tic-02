@@ -217,9 +217,17 @@
     if (ctx.state === "suspended") await ctx.resume();
     if (!loading)
       loading = Promise.all(Object.entries(FILES).map(async ([k, f]) => {
-        const r = await fetch("assets/audio/" + f);
-        if (!r.ok) throw Error("No se encontró " + f);
-        buffers[k] = await decode(await r.arrayBuffer());
+        let ab;
+        if (window.TIC_SAMPLES && window.TIC_SAMPLES[k]) {
+          const bin = atob(window.TIC_SAMPLES[k]), u = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+          ab = u.buffer;
+        } else {
+          const r = await fetch("assets/audio/" + f);
+          if (!r.ok) throw Error("No se encontró " + f);
+          ab = await r.arrayBuffer();
+        }
+        buffers[k] = await decode(ab);
       })).catch((e) => { loading = null; throw e; });
     await loading;
     master.gain.value = (state.volume ?? 65) / 100;
@@ -260,7 +268,7 @@
     if ((state.volume ?? 65) === 0) { toast("Sube el volumen para escuchar."); return; }
     if (notesUsed(r, c) === 0) { toast("Todavía no hay sonidos. Toca algunos cuadros."); return; }
     try { await ensureAudio(); } catch (e) {
-      document.getElementById("seq-status").textContent = "No se pudo cargar el audio. Abre la app desde su sitio web (no como archivo suelto).";
+      document.getElementById("seq-status").textContent = "No se pudo cargar el audio. Comprueba que la carpeta assets acompañe al archivo index.html.";
       return;
     }
     const loop = document.getElementById("seq-loop").checked;
