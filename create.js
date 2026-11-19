@@ -39,9 +39,9 @@
       checks: (p) => {
         const n = count(p.clap || []);
         return [
-          { text: "Tiene entre 3 y 6 palmas", ok: n >= 3 && n <= 6 },
-          { text: "Hay al menos un silencio entre palmas", ok: n > 0 && n < 8 },
-          { text: "Empieza con una palma en el primer tiempo", ok: !!(p.clap || [])[0] },
+          { text: "Pon entre 3 y 6 palmas", ok: n >= 3 && n <= 6 },
+          { text: "Deja algunos cuadros vacíos", ok: n > 0 && n < 8 },
+          { text: "Pon una palma en el cuadro del número 1", ok: !!(p.clap || [])[0] },
         ];
       },
       observe: "Si el escolar escucha su patrón antes de darlo por terminado, si lo puede repetir con palmas y si hace cambios por decisión propia.",
@@ -53,10 +53,10 @@
       objective: "Combinar tres timbres de percusión en un mismo patrón y distinguir su función.",
       instruction: "Ahora tienes bombo, caja y palmas. Usa los tres sonidos en tu patrón. Escucha qué cambia cuando mueves un golpe de lugar.",
       checks: (p) => [
-        { text: "Usa el bombo", ok: anyOn(p.kick || []) },
-        { text: "Usa la caja", ok: anyOn(p.snare || []) },
-        { text: "Usa las palmas", ok: anyOn(p.clap || []) },
-        { text: "El bombo suena en el primer tiempo", ok: !!(p.kick || [])[0] },
+        { text: "Pon al menos un bombo", ok: anyOn(p.kick || []) },
+        { text: "Pon al menos una caja", ok: anyOn(p.snare || []) },
+        { text: "Pon al menos una palma", ok: anyOn(p.clap || []) },
+        { text: "El bombo va en el cuadro del número 1", ok: !!(p.kick || [])[0] },
       ],
       observe: "Si diferencia los tres timbres al escuchar, si explica por qué ubicó cada sonido y si su patrón conserva un pulso estable.",
       guide: "Antes de crear, que escuche cada sonido por separado tocando un cuadro. Pregunta: «¿cuál suena más grave?, ¿dónde lo pondrías?». Puede representar cada sonido con un gesto.",
@@ -72,9 +72,9 @@
         const a = JSON.stringify(half(0).map((r) => r.map(Boolean)));
         const b = JSON.stringify(half(1).map((r) => r.map(Boolean)));
         return [
-          { text: "La parte 1 (pregunta) tiene sonidos", ok: half(0).some(anyOn) },
-          { text: "La parte 2 (respuesta) tiene sonidos", ok: half(1).some(anyOn) },
-          { text: "La respuesta no es una copia exacta", ok: half(0).some(anyOn) && half(1).some(anyOn) && a !== b },
+          { text: "Pon sonidos en la parte 1 (izquierda)", ok: half(0).some(anyOn) },
+          { text: "Pon sonidos en la parte 2 (derecha)", ok: half(1).some(anyOn) },
+          { text: "La parte 2 tiene algo distinto a la parte 1", ok: half(0).some(anyOn) && half(1).some(anyOn) && a !== b },
         ];
       },
       observe: "Si explica en qué se parecen y en qué se diferencian sus dos partes, y si la respuesta guarda relación con la pregunta.",
@@ -88,9 +88,9 @@
       checks: (p) => {
         const n = melodyNotes(p);
         return [
-          { text: "Tiene al menos 4 notas", ok: n.length >= 4 },
+          { text: "Pon al menos 4 notas", ok: n.length >= 4 },
           { text: "Usa las tres notas: Do, Re y Mi", ok: [0, 1, 2].every((x) => n.includes(x)) },
-          { text: "Termina en Do", ok: n.length > 0 && n[n.length - 1] === 0 },
+          { text: "La última nota es Do", ok: n.length > 0 && n[n.length - 1] === 0 },
         ];
       },
       observe: "Si canta su melodía con alturas aproximadas, si reconoce cuándo sube o baja y si la ajusta después de escucharla.",
@@ -106,9 +106,9 @@
         let up = false, down = false;
         for (let i = 1; i < n.length; i++) { if (n[i] > n[i - 1]) up = true; if (n[i] < n[i - 1]) down = true; }
         return [
-          { text: "Tiene al menos 5 notas", ok: n.length >= 5 },
-          { text: "En algún momento sube", ok: up },
-          { text: "En algún momento baja", ok: down },
+          { text: "Pon al menos 5 notas", ok: n.length >= 5 },
+          { text: "En algún momento la melodía sube (la nota siguiente está más arriba)", ok: up },
+          { text: "En algún momento la melodía baja (la nota siguiente está más abajo)", ok: down },
         ];
       },
       observe: "Si relaciona lo que ve en la cuadrícula con lo que escucha, y si describe el recorrido (sube, baja, se queda).",
@@ -125,10 +125,10 @@
         let last = -1; m.forEach((x, i) => { if (x !== null && x !== undefined) last = i; });
         const rest = m.slice(0, last).some((x) => x === null || x === undefined);
         return [
-          { text: "Tiene al menos 8 notas", ok: n.length >= 8 },
-          { text: "Hay notas en las dos partes", ok: m.slice(0, 8).some((x) => x !== null && x !== undefined) && m.slice(8).some((x) => x !== null && x !== undefined) },
-          { text: "Tiene al menos un silencio para respirar", ok: n.length > 0 && rest },
-          { text: "Termina en Do", ok: n.length > 0 && (n[n.length - 1] === 0 || n[n.length - 1] === 5) },
+          { text: "Pon al menos 8 notas", ok: n.length >= 8 },
+          { text: "Pon notas en la parte 1 y en la parte 2", ok: m.slice(0, 8).some((x) => x !== null && x !== undefined) && m.slice(8).some((x) => x !== null && x !== undefined) },
+          { text: "Deja al menos un cuadro vacío en medio de la melodía", ok: n.length > 0 && rest },
+          { text: "La última nota es Do (abajo o arriba)", ok: n.length > 0 && (n[n.length - 1] === 0 || n[n.length - 1] === 5) },
         ];
       },
       observe: "Si percibe la diferencia entre un final en Do y uno en otra nota, y si puede justificar dónde puso el silencio.",
@@ -202,7 +202,7 @@
     return "| " + groups.join(" | ") + " |";
   }
   // --- audio ---
-  let ctx = null, master = null, buffers = {}, loading = null, player = null;
+  let ctx = null, master = null, buffers = {}, loading = null, player = null, loopOn = false, metroOn = false;
   function decode(ab) {
     return new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
   }
@@ -249,6 +249,16 @@
       if (n !== null && n !== undefined) hit(c, dest, NOTES[n].sample, NOTES[n].rate, time, 0.95);
     }
   }
+  function click(c, dest, time, accent) {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = "square";
+    o.frequency.value = accent ? 1760 : 1175;
+    g.gain.setValueAtTime(0.0001, time);
+    g.gain.exponentialRampToValueAtTime(accent ? 0.35 : 0.22, time + 0.002);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.045);
+    o.connect(g); g.connect(dest);
+    o.start(time); o.stop(time + 0.06);
+  }
   async function preview(r, key, rate) {
     try { await ensureAudio(); hit(ctx, master, key, rate, ctx.currentTime + 0.01, 0.9); } catch (e) {}
   }
@@ -266,12 +276,12 @@
   async function play(r, c) {
     stop();
     if ((state.volume ?? 65) === 0) { toast("Sube el volumen para escuchar."); return; }
-    if (notesUsed(r, c) === 0) { toast("Todavía no hay sonidos. Toca algunos cuadros."); return; }
+    if (notesUsed(r, c) === 0 && !metroOn) { toast("Todavía no hay sonidos. Toca algunos cuadros o enciende el metrónomo."); return; }
     try { await ensureAudio(); } catch (e) {
       document.getElementById("seq-status").textContent = "No se pudo cargar el audio. Comprueba que la carpeta assets acompañe al archivo index.html.";
       return;
     }
-    const loop = document.getElementById("seq-loop").checked;
+    const loop = loopOn;
     const gap = document.getElementById("seq-gap").checked;
     const stepDur = 60 / c.tempo / 2;
     const cycle = r.steps * (gap ? 2 : 1);
@@ -281,7 +291,9 @@
       while (player === p && p.start + p.next * p.stepDur < ctx.currentTime + 0.12) {
         const pos = p.next % p.cycle;
         if (!p.loop && p.next >= p.cycle) break;
-        if (pos < r.steps) scheduleStep(ctx, master, r, c.pattern, pos, p.start + p.next * p.stepDur);
+        const when = p.start + p.next * p.stepDur;
+        if (pos < r.steps) scheduleStep(ctx, master, r, c.pattern, pos, when);
+        if (metroOn && pos % 2 === 0) click(ctx, master, when, (pos % r.steps) % 8 === 0);
         p.next++;
       }
     };
@@ -378,9 +390,9 @@
     const idx = RETOS.indexOf(r), within = RETOS.filter((x) => x.group === r.group);
     return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[r.group].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">RETO ${within.indexOf(r) + 1} DE 3 · BLOQUE 0${r.group + 5}</div><h1 id="create-title" tabindex="-1">${r.title}</h1></div><nav class="mini-progress" aria-label="Retos de este bloque">${within.map((x, j) => `<a href="#crear-${x.id}" ${x.id === id ? 'aria-current="step" class="active"' : ""} aria-label="Reto ${j + 1}: ${x.title}">${j + 1}</a>`).join("")}</nav></div><p class="objective"><b>Objetivo musical:</b> ${r.objective}</p>
 <section class="panel student-panel"><div class="panel-label"><b>01</b> MOMENTO DEL ESTUDIANTE DE COLEGIO · CREA CON TU GUÍA</div><p class="instruction">${r.instruction}</p><p class="small">Toca el nombre de cada ${r.type === "rhythm" ? "sonido para escucharlo solo" : "nota para escucharla sola"}. Los números marcan los tiempos.</p>${grid(r, c)}
-<div class="listening-controls seq-controls"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-loop"> Repetir en bucle</label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
+<div class="seq-buttons"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><button type="button" id="seq-loop" class="toggle-btn" aria-pressed="${loopOn}" title="Repetir en bucle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Bucle</span></button><button type="button" id="seq-metro" class="toggle-btn" aria-pressed="${metroOn}" title="Metrónomo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l6-10"/><path d="M7.5 16h9"/></svg><span>Metrónomo</span></button><button type="button" id="seq-clear" class="clear-btn">✕ Borrar todo</button></div><div class="listening-controls seq-controls"><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
 <div id="seq-status" class="audio-status" role="status">Listo para crear</div>
-<div class="create-side"><div class="hints"><b>Pistas del reto</b><ul id="seq-checks">${checksMarkup(r, c)}</ul><p class="small">Las pistas orientan; no son una calificación. Una creación puede ser valiosa aunque no las cumpla todas.</p></div><div class="hints"><b>Nombre de la creación</b><label for="seq-title" class="sr-only">Nombre de la creación</label><input id="seq-title" maxlength="80" value="${escapeHTML(c.title)}" placeholder="Ej.: «Tambores del recreo»"><p class="small">Que el escolar le ponga nombre. No escribas su nombre ni datos personales.</p><div class="actions"><button type="button" id="seq-wav" class="secondary">Descargar audio (.wav)</button><button type="button" id="seq-clear" class="ghost">Borrar todo</button></div></div></div></section>
+<div class="create-side"><div class="hints"><b>Pistas del reto</b><ul id="seq-checks">${checksMarkup(r, c)}</ul><p class="small">Las pistas orientan; no son una calificación. Una creación puede ser valiosa aunque no las cumpla todas.</p></div><div class="hints"><b>Nombre de la creación</b><label for="seq-title" class="sr-only">Nombre de la creación</label><input id="seq-title" maxlength="80" value="${escapeHTML(c.title)}" placeholder="Ej.: «Tambores del recreo»"><p class="small">Que el escolar le ponga nombre. No escribas su nombre ni datos personales.</p><div class="actions"><button type="button" id="seq-wav" class="secondary">Descargar audio (.wav)</button></div></div></div></section>
 <div class="activity-actions"><p>Cuando el escolar termine y la haya escuchado, abre tu registro para revisar la creación. La orientación docente permanece oculta durante la actividad.</p><button id="c-teacher-toggle" class="teacher-toggle" aria-expanded="false" aria-controls="c-teacher-panel">Abrir registro docente <span aria-hidden="true">↗</span></button></div>
 <section id="c-teacher-panel" class="panel teacher-panel" hidden><div class="teacher-top"><div><div class="panel-label">02 · REVISIÓN DEL UNIVERSITARIO</div><h2>¿Qué creó y cómo lo hizo?</h2><p>Revisa la creación con tu escucha. La app guarda lo que se compuso, pero tu observación del proceso es la evidencia.</p></div><button id="c-close-teacher" class="secondary">Ocultar registro</button></div><div class="review-box"><b>Creación guardada${c.title.trim() ? " · «" + escapeHTML(c.title.trim()) + "»" : ""}</b><pre id="c-notation" class="mini-notation">${escapeHTML(notation(r, c))}</pre><span class="small">${c.tempo} ppm · ${notesUsed(r, c)} ${r.type === "rhythm" ? "golpes" : "notas"}</span></div><details><summary>Ver orientación docente</summary><div class="reference"><b>Qué observar</b>${r.observe}<b>Cómo acompañar</b>${r.guide}</div><p>Pregunta antes de sugerir. Registra la ayuda que diste.</p></details>
 <form id="c-form" novalidate><label class="applied-check"><input type="checkbox" id="c-applied" ${c.applied ? "checked" : ""}> Un estudiante de colegio creó esta composición en la app con mi guía.</label><div class="observation-questions">${Object.keys(CREATE_QUESTIONS).map((k) => q(k, c)).join("")}</div><div class="form-columns"><label for="c-observed">¿Qué observaste en el proceso? <span class="optional">· justificación breve requerida</span><textarea id="c-observed" maxlength="600" rows="3" placeholder="Cómo exploró, qué decidió, qué cambió después de escuchar, cómo explicó su creación…">${escapeHTML(c.observed)}</textarea></label><label for="c-improve">¿Qué mejorarías? <span class="optional">· breve; si no propones cambios, indícalo</span><textarea id="c-improve" maxlength="600" rows="3" placeholder="Una pregunta guía, una restricción, más tiempo para explorar…">${escapeHTML(c.improve)}</textarea></label></div><div id="c-form-status" class="form-status" role="status">${evaluatedC(id) ? "Revisión confirmada. Si cambias algo, vuelve a guardar para confirmar." : draftC(id) ? "Borrador recuperado. Completa y confirma tu revisión." : "Completa las tres valoraciones y una observación breve."}</div><div class="actions"><button type="submit">Guardar revisión</button><button type="button" id="c-save-next" class="secondary">Guardar y continuar →</button></div><p class="small" style="margin-top:13px">Si el escolar cambia la creación después de confirmar, la revisión vuelve a borrador.</p></form></section>
@@ -415,7 +427,16 @@
     $$("[data-preview-note]").forEach((b) => b.addEventListener("click", () => { const n = NOTES[Number(b.dataset.previewNote)]; preview(r, n.sample, n.rate); }));
     $("#seq-play").addEventListener("click", () => play(r, c));
     $("#seq-stop").addEventListener("click", stop);
-    $("#seq-loop").addEventListener("change", () => { if (player) player.loop = $("#seq-loop").checked; });
+    $("#seq-loop").addEventListener("click", () => {
+      loopOn = !loopOn;
+      $("#seq-loop").setAttribute("aria-pressed", String(loopOn));
+      if (player) player.loop = loopOn;
+    });
+    $("#seq-metro").addEventListener("click", () => {
+      metroOn = !metroOn;
+      $("#seq-metro").setAttribute("aria-pressed", String(metroOn));
+      if (!metroOn && player && notesUsed(r, c) === 0) stop();
+    });
     $("#seq-gap").addEventListener("change", () => { if (player) play(r, c); });
     $("#seq-tempo").addEventListener("input", (ev) => {
       c.tempo = Number(ev.target.value);
