@@ -461,8 +461,8 @@
     if (!r.word) return "";
     const { syl, tonic } = wordInfo(c);
     const at = {};
-    hitsInOrder(c.pattern).forEach((h, k) => (at[h.step] = k < syl.length ? (k === tonic ? syl[k].toUpperCase() : syl[k]) : "?"));
-    return [...Array(r.steps).keys()].map((i) => `<span class="seq-syl ${at[i] && at[i] !== "?" && at[i] === at[i].toUpperCase() ? "strong" : ""}">${escapeHTML(at[i] || "")}</span>`).join("");
+    hitsInOrder(c.pattern).forEach((h, k) => (at[h.step] = k < syl.length ? (k === tonic ? syl[k].toUpperCase() : syl[k]) : ""));
+    return [...Array(r.steps).keys()].map((i) => `<span class="seq-syl ${at[i] && at[i] === at[i].toUpperCase() ? "strong" : ""}">${escapeHTML(at[i] || "")}</span>`).join("");
   }
   function checksMarkup(r, c) {
     return r.checks(c.pattern, c).map((x) => `<li><span aria-hidden="true">•</span>${x.text}</li>`).join("");
