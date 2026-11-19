@@ -13,13 +13,12 @@
   const DRUMS = [
     { key: "kick", name: "Bombo", hint: "grave" },
     { key: "snare", name: "Caja", hint: "seco" },
-    { key: "clap", name: "Palmas", hint: "palmas" },
+    { key: "clap", name: "Hi-hat", hint: "cerrado" },
   ];
   const FILES = {
     kick: "kick-pop.wav",
     snare: "snare.wav",
-    clap1: "clap-rr1.wav", clap2: "clap-rr2.wav", clap3: "clap-rr3.wav",
-    clap4: "clap-rr4.wav", clap5: "clap-rr5.wav", clap6: "clap-rr6.wav",
+    hat1: "hat-rr1.wav", hat2: "hat-rr2.wav", hat3: "hat-rr3.wav", hat4: "hat-rr4.wav",
     clave: "clave.wav", claveHi: "clave-hi.wav",
     marimba: "marimba-c.wav",
     marimbaG: "marimba-g.wav",
@@ -35,15 +34,15 @@
   const RETOS = [
     {
       id: "cr1", group: 0, type: "rhythm", rows: ["clap"], steps: 16, tempo: 80,
-      title: "Mi patrón de palmas",
-      objective: "Crear un patrón rítmico corto que otra persona pueda escuchar y repetir con palmas.",
-      instruction: "Toca los cuadros para poner palmas. Escucha tu patrón y cámbialo hasta que te guste. Debe poder repetirse con las manos.",
+      title: "Mi patrón de hi-hat",
+      objective: "Crear un patrón rítmico corto con el hi-hat que otra persona pueda escuchar y repetir con palmas.",
+      instruction: "Toca los cuadros para poner golpes de hi-hat. Escucha tu patrón y cámbialo hasta que te guste. Debe poder repetirse con palmas.",
       checks: (p) => {
         const n = count(p.clap || []);
         return [
-          { text: "Pon entre 3 y 6 palmas", ok: n >= 3 && n <= 6 },
+          { text: "Pon entre 3 y 6 golpes de hi-hat", ok: n >= 3 && n <= 6 },
           { text: "Deja algunos cuadros vacíos", ok: n > 0 && n < 16 },
-          { text: "Pon una palma en el cuadro del número 1", ok: !!(p.clap || [])[0] },
+          { text: "Pon un golpe en el cuadro del número 1", ok: !!(p.clap || [])[0] },
         ];
       },
       observe: "Si el escolar escucha su patrón antes de darlo por terminado, si lo puede repetir con palmas y si hace cambios por decisión propia.",
@@ -53,11 +52,11 @@
       id: "cr2", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 16, tempo: 84,
       title: "Tres sonidos",
       objective: "Combinar tres timbres de percusión en un mismo patrón y distinguir su función.",
-      instruction: "Ahora tienes bombo, caja y palmas. Usa los tres sonidos en tu patrón. Escucha qué cambia cuando mueves un golpe de lugar.",
+      instruction: "Ahora tienes bombo, caja y hi-hat. Usa los tres sonidos en tu patrón. Escucha qué cambia cuando mueves un golpe de lugar.",
       checks: (p) => [
         { text: "Pon al menos un bombo", ok: anyOn(p.kick || []) },
         { text: "Pon al menos una caja", ok: anyOn(p.snare || []) },
-        { text: "Pon al menos una palma", ok: anyOn(p.clap || []) },
+        { text: "Pon al menos un hi-hat", ok: anyOn(p.clap || []) },
         { text: "El bombo va en el cuadro del número 1", ok: !!(p.kick || [])[0] },
       ],
       observe: "Si diferencia los tres timbres al escuchar, si explica por qué ubicó cada sonido y si su patrón conserva un pulso estable.",
@@ -239,7 +238,7 @@
     master.gain.value = (state.volume ?? 65) / 100;
   }
   function hit(c, dest, key, rate, time, gain) {
-    if (key === "clap") key = "clap" + ((clapRR++ % 6) + 1);
+    if (key === "clap") key = "hat" + ((clapRR++ % 4) + 1);
     const src = c.createBufferSource();
     src.buffer = buffers[key];
     src.playbackRate.value = rate || 1;
@@ -250,7 +249,7 @@
   }
   function scheduleStep(c, dest, r, pat, step, time) {
     if (r.type === "rhythm") {
-      for (const k of r.rows) if (pat[k][step]) hit(c, dest, k, 1, time, k === "clap" ? 0.9 : 0.85);
+      for (const k of r.rows) if (pat[k][step]) hit(c, dest, k, 1, time, k === "clap" ? 0.7 : 0.85);
     } else {
       const n = pat.melody[step];
       if (n !== null && n !== undefined) hit(c, dest, NOTES[n].sample, NOTES[n].rate, time, 0.95);

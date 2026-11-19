@@ -18,7 +18,7 @@ No se pide programar, usar IA ni crear nuevos recursos educativos. La aplicació
 Pestaña «Crear» (`#crear`). Seis retos para estudiantes de colegio de 10 a 15 años: tres de creación rítmica (palmas; bombo, caja y palmas; pregunta y respuesta) y tres de creación melódica (Do-Re-Mi; pentatónica que sube y baja; melodía de dos frases con final en Do). El escolar crea en una cuadrícula de pasos dentro de la app, guiado por el universitario; luego el universitario abre el registro, revisa la creación y valora.
 
 - Secuenciador propio con Web Audio y las mismas muestras CC0 de la app (Re, Mi, La y Do agudo se obtienen transponiendo la marimba en Do y Sol). Sin servicios externos.
-- Cuadrícula en semicorcheas (16 pasos por compás; los retos de dos partes tienen 2 compases). Bombo pop seco, palmas reales que alternan seis tomas y metrónomo de claves de madera que se enciende y apaga.
+- Cuadrícula en semicorcheas (16 pasos por compás; los retos de dos partes tienen 2 compases). Bombo pop seco, hi-hat cerrado que alterna cuatro tomas y metrónomo de claves de madera que se enciende y apaga.
 - Velocidad ajustable, bucle, opción de dejar un ciclo en silencio para imitar y descarga de la creación en WAV para reutilizarla como modelo en los ejercicios de imitación y análisis.
 - «Pistas del reto» con verificación inmediata, sin calificación.
 - Las creaciones se guardan en el mismo registro local (`creations`), aparecen en Resultados, en el informe HTML y PDF (con notación de cuadrícula) y en el respaldo JSON. Los respaldos anteriores siguen siendo compatibles.

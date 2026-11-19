@@ -20,6 +20,6 @@ La reproducción de bucles en controles HTML nativos puede variar ligeramente en
 ## Sonidos de «Crea tu música»
 
 - **Bombo pop (`kick-pop.wav`):** sonido aportado por Manuel J. Camargo para esta app. Convertido a mono, 16 bit, con recorte a 0,32 s y fundido final; sin otro procesamiento.
-- **Palmas (`clap-rr1.wav` a `clap-rr6.wav`):** VCSL, `Idiophones/Struck Idiophones/Claps/Clap_rr1.wav` a `Clap_rr6.wav`. Se alternan en cada golpe para un sonido más natural.
+- **Hi-hat cerrado (`hat-rr1.wav` a `hat-rr4.wav`):** Virtuosity Drums (revisión indicada arriba), `Samples/mid/hh/mid_hh_closed_vl4_rr1.flac` a `rr4.flac`. Se alternan en cada golpe para un sonido más natural.
 - **Metrónomo (`clave.wav`, `clave-hi.wav`):** claves de madera de VCSL, `Claves1_Hit_v2_rr1_Mid.wav` (tiempos) y `Claves1_Hit_v3_rr1_Mid.wav` (primer tiempo del compás).
 - Conversión a WAV PCM mono, 16 bit, 44,1 kHz, recorte del silencio inicial y fundido final. Licencia CC0. Las mismas muestras van incrustadas en `assets/audio/samples.js`.
