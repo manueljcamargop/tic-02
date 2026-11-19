@@ -20,7 +20,7 @@ Pestaña «Crear» (`#crear`). Seis retos para estudiantes de colegio de 10 a 15
 - Secuenciador propio con Web Audio y las mismas muestras CC0 de la app (Re, Mi, La y Do agudo se obtienen transponiendo la marimba en Do y Sol). Sin servicios externos.
 - Cuadrícula en semicorcheas (16 pasos por compás; los retos de dos partes tienen 2 compases). Bombo pop seco, hi-hat cerrado aportado por el docente y metrónomo de claves de madera que se enciende y apaga.
 - Velocidad ajustable, bucle, opción de dejar un ciclo en silencio para imitar y descarga de la creación en WAV para reutilizarla como modelo en los ejercicios de imitación y análisis.
-- «Pistas del reto» con verificación inmediata, sin calificación.
+- «Lo que pide el reto»: lista de criterios sin verificación automática. La app no califica; el universitario escucha y decide en su registro.
 - Las creaciones se guardan en el mismo registro local (`creations`), aparecen en Resultados, en el informe HTML y PDF (con notación de cuadrícula) y en el respaldo JSON. Los respaldos anteriores siguen siendo compatibles.
 - Archivos: `create.js` y `create.css`.
 
