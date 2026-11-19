@@ -18,7 +18,7 @@
   const FILES = {
     kick: "kick-pop.wav",
     snare: "snare.wav",
-    hat1: "hat-rr1.wav", hat2: "hat-rr2.wav", hat3: "hat-rr3.wav", hat4: "hat-rr4.wav",
+    hat: "hat.wav",
     clave: "clave.wav", claveHi: "clave-hi.wav",
     marimba: "marimba-c.wav",
     marimbaG: "marimba-g.wav",
@@ -238,7 +238,7 @@
     master.gain.value = (state.volume ?? 65) / 100;
   }
   function hit(c, dest, key, rate, time, gain) {
-    if (key === "clap") key = "hat" + ((clapRR++ % 4) + 1);
+    if (key === "clap") key = "hat";
     const src = c.createBufferSource();
     src.buffer = buffers[key];
     src.playbackRate.value = rate || 1;
