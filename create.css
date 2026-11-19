@@ -99,5 +99,13 @@
 .word-box{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 4px;padding:14px 16px;border-radius:14px;background:#101a2d;border:1px solid var(--line)}
 .word-box label{font-weight:800;font-size:16px}
 .word-box input{flex:1;min-width:200px;font-size:20px;font-weight:700;padding:10px 14px}
-.word-box .syl{color:var(--aqua);font-weight:800;font-size:16px}
+
 .base-btn{color:var(--aqua);border-color:#3f8f84}
+.syl-chips{display:flex;align-items:center;flex-wrap:wrap;gap:6px;width:100%}
+.syl-chip{min-height:40px;padding:6px 14px;border-radius:10px;background:var(--raised);border:2px solid #56657d;color:var(--ink);font-size:18px;font-weight:700}
+.syl-chip.tonic{background:var(--purple);border-color:var(--purple);color:#1d1442}
+.syl-dash{color:var(--muted);font-weight:800}
+.syl-hint{color:#d3ddec;font-size:14px;margin-left:8px}
+.seq-sylrow .seq-label.syl-label{background:none;border:0;color:var(--muted);font-size:12px;min-height:26px}
+.seq-syl{min-height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--aqua)}
+.seq-syl.strong{color:var(--purple);font-size:14px;font-weight:900}

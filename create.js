@@ -31,18 +31,66 @@
   const anyOn = (a) => a.some(Boolean);
   const count = (a) => a.filter(Boolean).length;
   const melodyNotes = (p) => (p.melody || []).filter((n) => n !== null && n !== undefined);
-  function syllables(word) {
-    const w = word.toLowerCase().replace(/[^a-záéíóúüñ]/g, "");
-    const V = "aeiouáéíóúü", weak = "iuü", tonic = "íú";
-    let n = 0, prev = "";
-    for (const ch of w) {
-      if (V.includes(ch)) {
-        const diph = prev && (weak.includes(ch) || weak.includes(prev)) && !tonic.includes(ch) && !tonic.includes(prev) && ch !== prev;
-        if (!prev || !diph) n++;
-        prev = ch;
-      } else prev = "";
+  // Silabeo y acento prosódico del español (aproximado, suficiente para palabras sueltas)
+  function silabear(word) {
+    const w = (word || "").toLowerCase().normalize("NFC").replace(/[^a-záéíóúüñ]/g, "");
+    if (!w) return { syl: [], tonic: -1 };
+    const STRONG = "aeoáéóíú", WEAK = "iuü";
+    const isV = (s, i) => {
+      const ch = s[i];
+      if (ch === "y") return i === s.length - 1 && i > 0 && "aeiou".includes(s[i - 1]);
+      if (ch === "u" && i > 0 && (s[i - 1] === "q" || (s[i - 1] === "g" && "eéií".includes(s[i + 1] || "")))) return false;
+      return "aeiouáéíóúü".includes(ch);
+    };
+    const vv = (a, b) => {
+      a = a === "y" ? "i" : a; b = b === "y" ? "i" : b;
+      if (a === b) return false;
+      return (WEAK.includes(a) || WEAK.includes(b)) && !"íú".includes(a) && !"íú".includes(b);
+    };
+    // núcleos
+    const nuc = [];
+    for (let i = 0; i < w.length; i++) {
+      if (!isV(w, i)) continue;
+      const last = nuc[nuc.length - 1];
+      if (last && last[1] === i - 1 && vv(w[i - 1], w[i])) last[1] = i;
+      else if (last && last[1] === i - 2 && w[i - 1] === "h" && vv(w[i - 2], w[i])) last[1] = i;
+      else nuc.push([i, i]);
     }
-    return n;
+    if (!nuc.length) return { syl: [w], tonic: 0 };
+    const INSEP = ["pl", "bl", "fl", "cl", "gl", "kl", "pr", "br", "fr", "cr", "gr", "kr", "tr", "dr", "tl"];
+    const units = (s) => s.match(/ch|ll|rr|qu|gu|./g) || [];
+    const cuts = [];
+    for (let k = 0; k < nuc.length - 1; k++) {
+      const a = nuc[k][1] + 1, b = nuc[k + 1][0];
+      const cons = units(w.slice(a, b));
+      let take = 0; // consonantes que se quedan en la sílaba anterior
+      if (cons.length === 2) take = INSEP.includes(cons.join("")) ? 0 : 1;
+      else if (cons.length === 3) take = INSEP.includes(cons.slice(1).join("")) ? 1 : 2;
+      else if (cons.length >= 4) take = 2;
+      cuts.push(a + cons.slice(0, take).join("").length);
+    }
+    const syl = [];
+    let from = 0;
+    for (const c of cuts) { syl.push(w.slice(from, c)); from = c; }
+    syl.push(w.slice(from));
+    let tonic = syl.findIndex((s) => /[áéíóú]/.test(s));
+    if (tonic < 0) tonic = syl.length === 1 ? 0 : /[aeiouns]$/.test(w) ? syl.length - 2 : syl.length - 1;
+    return { syl, tonic };
+  }
+  function syllables(word) { return silabear(word).syl.length; }
+  function wordInfo(c) {
+    const r = silabear(c.word || "");
+    const auto = r.tonic;
+    const tonic = Number.isInteger(c.tonic) && c.tonic >= 0 && c.tonic < r.syl.length ? c.tonic : auto;
+    return { syl: r.syl, tonic, auto };
+  }
+  function hitsInOrder(p) {
+    const out = [];
+    for (let i = 0; i < (p.clap || []).length; i++) {
+      if ((p.snare || [])[i]) out.push({ step: i, snare: true });
+      else if (p.clap[i]) out.push({ step: i, snare: false });
+    }
+    return out;
   }
   const RETOS = [
     {
@@ -51,17 +99,20 @@
       objective: "Descubrir que las palabras ya tienen ritmo: cada sílaba es un golpe y la sílaba fuerte se acentúa.",
       instruction: "Escribe una palabra que te guste: un apodo, un animal o tu comida favorita. Dila en voz alta varias veces. Pon un golpe por cada sílaba: la sílaba que suena más fuerte va con la caja y las demás con el hi-hat.",
       checks: (p, c) => {
-        const syl = syllables(c.word || "");
-        const total = count(p.snare || []) + count(p.clap || []);
+        const { syl, tonic } = wordInfo(c);
+        const hits = hitsInOrder(p);
+        const snares = hits.filter((h) => h.snare);
+        const strong = syl[tonic] || "";
+        const onTonic = syl.length > 0 && snares.length === 1 && hits[tonic] && hits[tonic].snare;
         return [
-          { text: "Escribe tu palabra arriba", ok: syl > 0 },
-          { text: syl ? `Pon un golpe por sílaba (tu palabra tiene ${syl})` : "Pon un golpe por sílaba", ok: syl > 0 && total === syl },
-          { text: "La caja suena solo una vez: en la sílaba fuerte", ok: count(p.snare || []) === 1 },
-          { text: "Empieza en el cuadro del número 1", ok: !!((p.snare || [])[0] || (p.clap || [])[0]) },
+          { text: "Escribe tu palabra arriba", ok: syl.length > 0 },
+          { text: syl.length ? `Un golpe por sílaba: ${syl.join("-")} = ${syl.length}` : "Un golpe por sílaba", ok: syl.length > 0 && hits.length === syl.length },
+          { text: strong ? `La caja suena solo en la sílaba fuerte: «${strong.toUpperCase()}»` : "La caja suena solo en la sílaba fuerte", ok: !!onTonic },
+          { text: "La sílaba fuerte cae en un número (un tiempo)", ok: !!onTonic && hits[tonic].step % 4 === 0 },
         ];
       },
-      observe: "Si dice la palabra con un pulso estable, si identifica la sílaba fuerte y si lo que suena en la app coincide con lo que dice en voz alta.",
-      guide: "Que diga la palabra mientras aplaude. Pregunta: «¿en qué parte de la palabra pones más fuerza?». Activa el bucle y digan la palabra junto con la app. Si el conteo de sílabas de la app no coincide con lo que escuchan, confíen en el oído: la app calcula de forma aproximada.",
+      observe: "Si dice la palabra con un pulso estable, si identifica la sílaba fuerte (acento prosódico) y si la hace coincidir con un tiempo del compás, como ocurre al cantar.",
+      guide: "Que diga la palabra mientras aplaude. Pregunta: «¿en qué parte de la palabra pones más fuerza?». Activa el bucle y digan la palabra junto con la app. La app separa las sílabas y propone la sílaba fuerte. Si la palabra se pronuncia distinto (un apodo, un nombre extranjero), toca la sílaba correcta en el recuadro: la app calificará con tu decisión.",
     },
     {
       id: "rd", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 16, tempo: 92,
@@ -165,7 +216,7 @@
       ? Object.fromEntries(r.rows.map((k) => [k, Array(r.steps).fill(false)]))
       : { melody: Array(r.steps).fill(null) };
   const blankCreation = (r) => ({
-    pattern: blankPattern(r), tempo: r.tempo, title: "", word: "",
+    pattern: blankPattern(r), tempo: r.tempo, title: "", word: "", tonic: null,
     applied: false, achievement: "", help: "", technology: "", observed: "", improve: "", confirmed: false,
   });
   const txt = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
@@ -195,6 +246,7 @@
       if (Number.isFinite(c.tempo)) o.tempo = Math.min(120, Math.max(60, Math.round(c.tempo)));
       o.title = txt(c.title, 80);
       o.word = txt(c.word, 30);
+      o.tonic = Number.isInteger(c.tonic) && c.tonic >= 0 && c.tonic < 12 ? c.tonic : null;
       o.applied = c.applied === true;
       o.confirmed = c.confirmed === true;
       for (const k of Object.keys(CHOICE_SETS)) if (CHOICE_SETS[k].includes(c[k])) o[k] = c[k];
@@ -214,7 +266,7 @@
   const statusC = (id) => (evaluatedC(id) ? "Evaluado" : draftC(id) ? "Borrador" : "Por crear");
   function notation(r, c) {
     if (r.type === "rhythm")
-      return (r.word && c.word && c.word.trim() ? "Palabra: " + c.word.trim() + " (" + syllables(c.word) + " sílabas)\n" : "") + r.rows.map((k) => {
+      return (r.word && c.word && c.word.trim() ? "Palabra: " + wordInfo(c).syl.map((x, i) => (i === wordInfo(c).tonic ? x.toUpperCase() : x)).join("-") + "\n" : "") + r.rows.map((k) => {
         const d = DRUMS.find((x) => x.key === k);
         const cells = c.pattern[k].map((on) => (on ? "X" : "·"));
         const groups = [];
@@ -396,7 +448,21 @@
       rows = [...r.notes].reverse().map((n) => `<div class="seq-row" data-row="${n}"><button type="button" class="seq-label seq-preview note-${n}" data-preview-note="${n}" title="Escuchar ${NOTES[n].name}">${NOTES[n].name}</button>${cols.map((i) => `<button type="button" class="seq-cell seq-col note-${n} ${i % 4 === 0 ? "beat" : ""} ${r.steps === 32 && i === 16 ? "half" : ""}" data-step="${i}" data-n="${n}" aria-pressed="${c.pattern.melody[i] === n}" aria-label="${NOTES[n].name}, paso ${i + 1}"></button>`).join("")}</div>`);
     }
     const parts = r.steps === 32 ? `<div class="seq-parts" aria-hidden="true"><span>Parte 1 · pregunta</span><span>Parte 2 · respuesta</span></div>` : "";
+    const sylRow = r.word ? `<div class="seq-row seq-sylrow" aria-hidden="true"><span class="seq-label syl-label">Sílabas</span><span id="seq-sylcells" style="display:contents">${hitLabels(r, c)}</span></div>` : "";
+    rows = r.word ? [sylRow, ...rows] : rows;
     return `<div class="seq-wrap"><div class="seq ${r.type}" style="--steps:${r.steps}" data-steps="${r.steps}" role="group" aria-label="Cuadrícula de creación: ${r.steps} pasos">${parts}${header}${rows.join("")}</div></div>`;
+  }
+  function chips(c) {
+    const { syl, tonic, auto } = wordInfo(c);
+    if (!syl.length) return '<span class="syl-hint">Escribe una palabra para ver sus sílabas.</span>';
+    return syl.map((x, i) => `<button type="button" class="syl-chip ${i === tonic ? "tonic" : ""}" data-syl="${i}" aria-pressed="${i === tonic}" title="Marcar «${escapeHTML(x)}» como sílaba fuerte">${escapeHTML(i === tonic ? x.toUpperCase() : x)}</button>`).join('<span class="syl-dash" aria-hidden="true">-</span>') + `<span class="syl-hint">${tonic === auto ? "Sílaba fuerte propuesta por la app. Si se pronuncia distinto, toca la correcta." : "Sílaba fuerte elegida por el profesor."}</span>`;
+  }
+  function hitLabels(r, c) {
+    if (!r.word) return "";
+    const { syl, tonic } = wordInfo(c);
+    const at = {};
+    hitsInOrder(c.pattern).forEach((h, k) => (at[h.step] = k < syl.length ? (k === tonic ? syl[k].toUpperCase() : syl[k]) : "?"));
+    return [...Array(r.steps).keys()].map((i) => `<span class="seq-syl ${at[i] && at[i] !== "?" && at[i] === at[i].toUpperCase() ? "strong" : ""}">${escapeHTML(at[i] || "")}</span>`).join("");
   }
   function checksMarkup(r, c) {
     return r.checks(c.pattern, c).map((x) => `<li class="${x.ok ? "ok" : ""}"><span aria-hidden="true">${x.ok ? "✓" : "○"}</span>${x.text}<span class="sr-only">${x.ok ? " · conseguido" : " · pendiente"}</span></li>`).join("");
@@ -408,7 +474,7 @@
     const r = RETOS.find((x) => x.id === id), c = rec(id);
     const idx = RETOS.indexOf(r), within = RETOS.filter((x) => x.group === r.group);
     return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[r.group].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">RETO ${within.indexOf(r) + 1} DE 3 · BLOQUE 0${r.group + 5}</div><h1 id="create-title" tabindex="-1">${r.title}</h1></div><nav class="mini-progress" aria-label="Retos de este bloque">${within.map((x, j) => `<a href="#crear-${x.id}" ${x.id === id ? 'aria-current="step" class="active"' : ""} aria-label="Reto ${j + 1}: ${x.title}">${j + 1}</a>`).join("")}</nav></div><p class="objective"><b>Objetivo musical:</b> ${r.objective}</p>
-<section class="panel student-panel"><div class="panel-label"><b>01</b> MOMENTO DEL ESTUDIANTE DE COLEGIO · CREA CON TU GUÍA</div><p class="instruction">${r.instruction}</p><p class="small">Toca el nombre de cada ${r.type === "rhythm" ? "sonido para escucharlo solo" : "nota para escucharla sola"}. Los números marcan los tiempos.</p>${r.word ? `<div class="word-box"><label for="seq-word">Tu palabra</label><input id="seq-word" maxlength="30" autocomplete="off" value="${escapeHTML(c.word)}" placeholder="Ej.: mariposa, arepa, Lucho…"><span id="seq-syl" class="syl">${c.word && syllables(c.word) ? syllables(c.word) + " sílabas" : ""}</span></div>` : ""}${grid(r, c)}
+<section class="panel student-panel"><div class="panel-label"><b>01</b> MOMENTO DEL ESTUDIANTE DE COLEGIO · CREA CON TU GUÍA</div><p class="instruction">${r.instruction}</p><p class="small">Toca el nombre de cada ${r.type === "rhythm" ? "sonido para escucharlo solo" : "nota para escucharla sola"}. Los números marcan los tiempos.</p>${r.word ? `<div class="word-box"><label for="seq-word">Tu palabra</label><input id="seq-word" maxlength="30" autocomplete="off" value="${escapeHTML(c.word)}" placeholder="Ej.: mariposa, arepa, Lucho…"><div class="syl-chips" id="seq-syl">${chips(c)}</div></div>` : ""}${grid(r, c)}
 <div class="seq-buttons"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><button type="button" id="seq-loop" class="toggle-btn" aria-pressed="${loopOn}" title="Repetir en bucle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Bucle</span></button><button type="button" id="seq-metro" class="toggle-btn" aria-pressed="${metroOn}" title="Metrónomo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l6-10"/><path d="M7.5 16h9"/></svg><span>Metrónomo</span></button>${r.base ? '<button type="button" id="seq-base" class="toggle-btn base-btn">⤓ Ritmo base</button>' : ""}<button type="button" id="seq-clear" class="clear-btn">✕ Borrar todo</button></div><div class="listening-controls seq-controls"><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
 <div id="seq-status" class="audio-status" role="status">Listo para crear</div>
 <div class="create-side"><div class="hints"><b>Pistas del reto</b><ul id="seq-checks">${checksMarkup(r, c)}</ul><p class="small">Las pistas orientan; no son una calificación. Una creación puede ser valiosa aunque no las cumpla todas.</p></div><div class="hints"><b>Nombre de la creación</b><label for="seq-title" class="sr-only">Nombre de la creación</label><input id="seq-title" maxlength="80" value="${escapeHTML(c.title)}" placeholder="Ej.: «Tambores del recreo»"><p class="small">Que el escolar le ponga nombre. No escribas su nombre ni datos personales.</p><div class="actions"><button type="button" id="seq-wav" class="secondary">Descargar audio (.wav)</button></div></div></div></section>
@@ -423,6 +489,7 @@
       c.confirmed = false;
       save();
       $("#seq-checks").innerHTML = checksMarkup(r, c);
+      if (r.word) $("#seq-sylcells").innerHTML = hitLabels(r, c);
       $("#c-notation").textContent = notation(r, c);
       $("#c-status").textContent = statusC(id);
       if (evaluatedC(id) === false && $("#c-form-status")) $("#c-form-status").textContent = "Creación modificada. Revisa y confirma de nuevo.";
@@ -469,12 +536,17 @@
       if (master) master.gain.value = state.volume / 100;
       save();
     });
-    if (r.word) $("#seq-word").addEventListener("input", (ev) => {
-      c.word = ev.target.value;
-      const n = syllables(c.word);
-      $("#seq-syl").textContent = n ? n + (n === 1 ? " sílaba" : " sílabas") : "";
-      changed();
-    });
+    if (r.word) {
+      const bindChips = () => $$(".syl-chip").forEach((b) => b.addEventListener("click", () => {
+        c.tonic = Number(b.dataset.syl);
+        $("#seq-syl").innerHTML = chips(c); bindChips(); changed();
+      }));
+      $("#seq-word").addEventListener("input", (ev) => {
+        c.word = ev.target.value; c.tonic = null;
+        $("#seq-syl").innerHTML = chips(c); bindChips(); changed();
+      });
+      bindChips();
+    }
     if (r.base) $("#seq-base").addEventListener("click", () => {
       if (notesUsed(r, c) && !window.confirm("¿Reemplazar lo que hay en la cuadrícula por el ritmo base?")) return;
       c.pattern = blankPattern(r);
