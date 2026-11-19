@@ -1,4 +1,4 @@
-# TIC 02 · Verificación del rediseño
+# TIC · Verificación del rediseño
 
 5 de noviembre de 2026. Pruebas en navegador integrado de Codex, servido como sitio estático local. Se usaron registros ficticios identificados como PRUEBA DE INTERFAZ, no datos de una práctica real.
 

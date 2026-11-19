@@ -1,4 +1,4 @@
-# Audio de TIC 02
+# Audio de TIC
 
 Las secuencias rítmicas y melódicas son originales de este proyecto. Se prepararon 19 frases para 12 ejercicios a partir de cinco muestras acústicas con licencia CC0-1.0. No se solicita audio a servicios remotos al usar la aplicación.
 

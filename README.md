@@ -1,4 +1,4 @@
-# TIC 02
+# TIC
 
 Plataforma estática de experimentación musical y observación pedagógica para Informática Musical, formación universitaria de profesores de música en Colombia. Rediseño de la aplicación existente «Laboratorio del Docente Musical», en su misma carpeta y sin modificar Synth FX ni otros proyectos.
 
@@ -13,6 +13,16 @@ Plataforma estática de experimentación musical y observación pedagógica para
 
 No se pide programar, usar IA ni crear nuevos recursos educativos. La aplicación trae las secuencias musicales. No graba audio o video, no pide micrófono/cámara y no evalúa interpretaciones. El universitario toma todas las decisiones de valoración mediante escucha y observación directa.
 
+## Taller de creación (bloques 05 y 06)
+
+Pestaña «Crear» (`#crear`). Seis retos para estudiantes de colegio de 10 a 15 años: tres de creación rítmica (palmas; bombo, caja y palmas; pregunta y respuesta) y tres de creación melódica (Do-Re-Mi; pentatónica que sube y baja; melodía de dos frases con final en Do). El escolar crea en una cuadrícula de pasos dentro de la app, guiado por el universitario; luego el universitario abre el registro, revisa la creación y valora.
+
+- Secuenciador propio con Web Audio y las mismas muestras CC0 de la app (Re, Mi, La y Do agudo se obtienen transponiendo la marimba en Do y Sol). Sin servicios externos.
+- Velocidad ajustable, bucle, opción de dejar un ciclo en silencio para imitar y descarga de la creación en WAV para reutilizarla como modelo en los ejercicios de imitación y análisis.
+- «Pistas del reto» con verificación inmediata, sin calificación.
+- Las creaciones se guardan en el mismo registro local (`creations`), aparecen en Resultados, en el informe HTML y PDF (con notación de cuadrícula) y en el respaldo JSON. Los respaldos anteriores siguen siendo compatibles.
+- Archivos: `create.js` y `create.css`.
+
 ## Estructura conservada y cambios
 
 Se conservaron HTML/CSS/JavaScript estáticos, archivos relativos, controles de audio nativos, avisos de estado, navegación por vistas, guardado local, validación de respaldos y descarga mediante archivos locales. Se reemplazó el contenido de diseño de proyectos por 12 ejercicios aplicables, se rediseñó la identidad visual y se añadió observación docente, resumen e informe.
@@ -26,7 +36,7 @@ Se conservaron HTML/CSS/JavaScript estáticos, archivos relativos, controles de 
 - `assets/vendor/`: jsPDF 4.2.1 (MIT) y Noto Sans Regular (SIL OFL), incluidos localmente. La exportación no solicita archivos a un CDN.
 - `assets/licenses/`: licencias, créditos y procedencia exacta de las muestras.
 
-Los archivos de audio heredados de la primera versión se conservan en `assets/` por continuidad del proyecto, pero TIC 02 reproduce exclusivamente los archivos de `assets/audio/`.
+Los archivos de audio heredados de la primera versión se conservan en `assets/` por continuidad del proyecto, pero TIC reproduce exclusivamente los archivos de `assets/audio/`.
 
 ## Bloques
 
@@ -53,7 +63,7 @@ Los resultados son observaciones de una experiencia concreta y no pruebas cient�
 
 ## Video externo
 
-La app orienta a grabar externamente con celular: ejercicio utilizado, participación musical e intervención docente. El archivo se entrega por separado. Antes de grabar menores se debe contar con las autorizaciones de sus responsables y la institución. Es posible usar evidencia sin rostros, nombres ni datos identificables. TIC 02 solo conserva un enlace opcional y no controla su acceso.
+La app orienta a grabar externamente con celular: ejercicio utilizado, participación musical e intervención docente. El archivo se entrega por separado. Antes de grabar menores se debe contar con las autorizaciones de sus responsables y la institución. Es posible usar evidencia sin rostros, nombres ni datos identificables. TIC solo conserva un enlace opcional y no controla su acceso.
 
 ## Guardado y privacidad
 
