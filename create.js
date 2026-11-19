@@ -207,7 +207,7 @@
     },
   ];
   const CREATE_QUESTIONS = {
-    achievement: "¿El escolar logró crear y escuchar su composición?",
+    achievement: "¿El escolar logró crear en los retos de este bloque?",
     help: "¿Necesitó ayuda?",
     technology: "¿La app facilitó la creación?",
   };
@@ -215,10 +215,8 @@
     r.type === "rhythm"
       ? Object.fromEntries(r.rows.map((k) => [k, Array(r.steps).fill(false)]))
       : { melody: Array(r.steps).fill(null) };
-  const blankCreation = (r) => ({
-    pattern: blankPattern(r), tempo: r.tempo, title: "", word: "", tonic: null,
-    applied: false, achievement: "", help: "", technology: "", observed: "", improve: "", confirmed: false,
-  });
+  const blankCreation = (r) => ({ pattern: blankPattern(r), tempo: r.tempo, title: "", word: "", tonic: null });
+  const blankReview = () => ({ applied: false, achievement: "", help: "", technology: "", observed: "", improve: "", confirmed: false });
   const txt = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
   const CHOICE_SETS = {
     achievement: ["Sí", "Parcialmente", "No"],
@@ -247,23 +245,33 @@
       o.title = txt(c.title, 80);
       o.word = txt(c.word, 30);
       o.tonic = Number.isInteger(c.tonic) && c.tonic >= 0 && c.tonic < 12 ? c.tonic : null;
-      o.applied = c.applied === true;
-      o.confirmed = c.confirmed === true;
-      for (const k of Object.keys(CHOICE_SETS)) if (CHOICE_SETS[k].includes(c[k])) o[k] = c[k];
-      o.observed = txt(c.observed, 600);
-      o.improve = txt(c.improve, 600);
       out[r.id] = o;
     }
+    GROUPS.forEach((_, g) => {
+      const v = raw["_rev" + g];
+      if (!v || typeof v !== "object") return;
+      const o = blankReview();
+      o.applied = v.applied === true;
+      o.confirmed = v.confirmed === true;
+      for (const k of Object.keys(CHOICE_SETS)) if (CHOICE_SETS[k].includes(v[k])) o[k] = v[k];
+      o.observed = txt(v.observed, 800);
+      o.improve = txt(v.improve, 800);
+      out["_rev" + g] = o;
+    });
     return out;
   }
   // --- helpers that rely on app.js globals at call time ---
   const S = () => (state.creations || (state.creations = {}));
   const rec = (id) => S()[id] || (S()[id] = blankCreation(RETOS.find((r) => r.id === id)));
   const notesUsed = (r, c) => (r.type === "rhythm" ? r.rows.reduce((t, k) => t + count(c.pattern[k]), 0) : melodyNotes(c.pattern).length);
-  const validC = (r, c) => c.applied && Object.keys(CHOICE_SETS).every((k) => CHOICE_SETS[k].includes(c[k])) && c.observed.trim().length > 0 && notesUsed(r, c) > 0;
-  const evaluatedC = (id) => { const c = S()[id], r = RETOS.find((x) => x.id === id); return !!c && c.confirmed && validC(r, c); };
-  const draftC = (id) => { const c = S()[id], r = RETOS.find((x) => x.id === id); return !!c && (c.applied || c.title.trim() || c.observed.trim() || c.improve.trim() || notesUsed(r, c) > 0 || Object.keys(CHOICE_SETS).some((k) => c[k])); };
-  const statusC = (id) => (evaluatedC(id) ? "Evaluado" : draftC(id) ? "Borrador" : "Por crear");
+  const blockRetos = (g) => RETOS.filter((r) => r.group === g);
+  const createdC = (id) => { const c = S()[id], r = RETOS.find((x) => x.id === id); return !!c && notesUsed(r, c) > 0; };
+  const statusC = (id) => (createdC(id) ? "Creado" : "Por crear");
+  const rev = (g) => S()["_rev" + g] || (S()["_rev" + g] = blankReview());
+  const validB = (g, v) => v.applied && Object.keys(CHOICE_SETS).every((k) => CHOICE_SETS[k].includes(v[k])) && v.observed.trim().length > 0 && blockRetos(g).some((r) => createdC(r.id));
+  const evaluatedB = (g) => { const v = S()["_rev" + g]; return !!v && v.confirmed && validB(g, v); };
+  const draftB = (g) => { const v = S()["_rev" + g]; return !!v && (v.applied || v.observed.trim() || v.improve.trim() || Object.keys(CHOICE_SETS).some((k) => v[k])); };
+  const statusB = (g) => (evaluatedB(g) ? "Confirmado" : draftB(g) ? "Borrador" : "Pendiente");
   function notation(r, c) {
     if (r.type === "rhythm")
       return (r.word && c.word && c.word.trim() ? "Palabra: " + wordInfo(c).syl.map((x, i) => (i === wordInfo(c).tonic ? x.toUpperCase() : x)).join("-") + "\n" : "") + r.rows.map((k) => {
@@ -427,13 +435,13 @@
   // --- rendering ---
   function catalog() {
     const blocks = GROUPS.map((g, gi) => {
-      const list = RETOS.filter((r) => r.group === gi);
-      return `<section class="block-section create-block"><div class="block-header"><h3><span>0${gi + 5}</span>${g.title}</h3><small>${list.filter((r) => evaluatedC(r.id)).length}/3 evaluados</small></div><div class="exercise-grid">${list.map((r, j) => {
+      const list = blockRetos(gi);
+      return `<section class="block-section create-block"><div class="block-header"><h3><span>0${gi + 5}</span>${g.title}</h3><small>${list.filter((r) => createdC(r.id)).length}/3 creados · registro: ${statusB(gi)}</small></div><div class="exercise-grid">${list.map((r, j) => {
         const c = S()[r.id];
-        return `<article class="exercise-card create-card"><div class="card-meta"><span>Reto 0${j + 1} / 03 · ${r.steps} pasos</span><span class="${evaluatedC(r.id) ? "done" : ""}">${statusC(r.id)}</span></div><h4>${r.title}</h4><p>${r.objective}</p>${c && notesUsed(r, c) ? `<pre class="mini-notation" aria-label="Creación guardada">${escapeHTML(notation(r, c))}</pre>` : ""}<button data-reto="${r.id}">Abrir reto <span aria-hidden="true">↗</span></button></article>`;
-      }).join("")}</div></section>`;
+        return `<article class="exercise-card create-card"><div class="card-meta"><span>Reto 0${j + 1} / 03</span><span class="${createdC(r.id) ? "done" : ""}">${statusC(r.id)}</span></div><h4>${r.title}</h4><p>${r.objective}</p>${c && notesUsed(r, c) ? `<pre class="mini-notation" aria-label="Creación guardada">${escapeHTML(notation(r, c))}</pre>` : ""}<button data-reto="${r.id}">Abrir reto <span aria-hidden="true">↗</span></button></article>`;
+      }).join("")}</div><div class="block-review"><p><b>Registro docente · ${g.title}</b> Al terminar los tres retos, revisas las creaciones y registras lo que observaste.</p><button class="teacher-toggle" data-rev="${gi}">Abrir registro del bloque <span aria-hidden="true">↗</span></button></div></section>`;
     }).join("");
-    return `<div class="eyebrow"><span class="status-dot"></span> CREAR · ESCUCHAR · REVISAR</div><div class="hero create-hero"><div><h1 id="create-title" tabindex="-1">Ahora ellos<br><em>componen.</em></h1><p class="lead">Seis retos para que estudiantes de colegio de 10 a 15 años creen ritmos y melodías en la app, con tu guía. Después revisas su creación y registras lo que observaste.</p><button data-reto="cr1">Abrir primer reto <span aria-hidden="true">↗</span></button></div><div class="hero-art create-art" aria-hidden="true">${[...Array(32)].map((_, i) => `<i class="${[0, 3, 6, 9, 12, 13, 18, 21, 26, 28, 31].includes(i) ? "on" : ""}"></i>`).join("")}<div class="art-label">CREACIÓN GUIADA / REVISIÓN DOCENTE</div></div></div><div class="journey" aria-label="Recorrido del taller"><span><b>01</b> Explora</span><span><b>02</b> Crea</span><span><b>03</b> Escucha</span><span><b>04</b> Ajusta</span><span><b>05</b> Revisa</span></div><div class="notice"><span aria-hidden="true">◎</span><p><b>El escolar toma el control; tú guías.</b> Deja que toque la pantalla, escuche y decida. Pregunta en vez de corregir. Las pistas del reto orientan, no califican. Cuando termine, abre el registro docente para revisar.</p></div>${blocks}<div class="notice"><span aria-hidden="true">↻</span><p><b>Lo creado vuelve al aula.</b> Cada creación puede descargarse en audio y usarse como modelo de los ejercicios de imitación y análisis: lo que compone un estudiante lo imitan sus compañeros.</p></div>`;
+    return `<div class="eyebrow"><span class="status-dot"></span> CREAR · ESCUCHAR · REVISAR</div><div class="hero create-hero"><div><h1 id="create-title" tabindex="-1">Ahora ellos<br><em>componen.</em></h1><p class="lead">Seis retos para que estudiantes de colegio de 10 a 15 años creen ritmos y melodías en la app, con tu guía. Al final de cada bloque revisas sus creaciones y registras lo que observaste.</p><button data-reto="${RETOS[0].id}">Abrir primer reto <span aria-hidden="true">↗</span></button></div><div class="hero-art create-art" aria-hidden="true">${[...Array(32)].map((_, i) => `<i class="${[0, 3, 6, 9, 12, 13, 18, 21, 26, 28, 31].includes(i) ? "on" : ""}"></i>`).join("")}<div class="art-label">CREACIÓN GUIADA / REVISIÓN DOCENTE</div></div></div><div class="journey" aria-label="Recorrido del taller"><span><b>01</b> Explora</span><span><b>02</b> Crea</span><span><b>03</b> Escucha</span><span><b>04</b> Ajusta</span><span><b>05</b> Revisa</span></div><div class="notice"><span aria-hidden="true">◎</span><p><b>El escolar toma el control; tú guías.</b> Deja que toque la pantalla, escuche y decida. Pregunta en vez de corregir. La app no califica. Al terminar los tres retos de cada bloque, abre el registro docente del bloque.</p></div>${blocks}<div class="notice"><span aria-hidden="true">↻</span><p><b>Lo creado vuelve al aula.</b> Cada creación puede descargarse en audio y usarse como modelo de los ejercicios de imitación y análisis: lo que compone un estudiante lo imitan sus compañeros.</p></div>`;
   }
   function grid(r, c) {
     const cols = [...Array(r.steps).keys()];
@@ -478,21 +486,18 @@
 <div class="seq-buttons"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><button type="button" id="seq-loop" class="toggle-btn" aria-pressed="${loopOn}" title="Repetir en bucle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Bucle</span></button><button type="button" id="seq-metro" class="toggle-btn" aria-pressed="${metroOn}" title="Metrónomo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l6-10"/><path d="M7.5 16h9"/></svg><span>Metrónomo</span></button>${r.base ? '<button type="button" id="seq-base" class="toggle-btn base-btn">⤓ Ritmo base</button>' : ""}<button type="button" id="seq-clear" class="clear-btn">✕ Borrar todo</button></div><div class="listening-controls seq-controls"><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
 <div id="seq-status" class="audio-status" role="status">Listo para crear</div>
 <div class="create-side"><div class="hints"><b>Lo que pide el reto</b><ul id="seq-checks">${checksMarkup(r, c)}</ul><p class="small">La app no califica. Cuando termine, el profe escucha la creación y decide en su registro.</p></div><div class="hints"><b>Nombre de la creación</b><label for="seq-title" class="sr-only">Nombre de la creación</label><input id="seq-title" maxlength="80" value="${escapeHTML(c.title)}" placeholder="Ej.: «Tambores del recreo»"><p class="small">Que el escolar le ponga nombre. No escribas su nombre ni datos personales.</p><div class="actions"><button type="button" id="seq-wav" class="secondary">Descargar audio (.wav)</button></div></div></div></section>
-<div class="activity-actions"><p>Cuando el escolar termine y la haya escuchado, abre tu registro para revisar la creación. La orientación docente permanece oculta durante la actividad.</p><button id="c-teacher-toggle" class="teacher-toggle" aria-expanded="false" aria-controls="c-teacher-panel">Abrir registro docente <span aria-hidden="true">↗</span></button></div>
-<section id="c-teacher-panel" class="panel teacher-panel" hidden><div class="teacher-top"><div><div class="panel-label">02 · REVISIÓN DEL UNIVERSITARIO</div><h2>¿Qué creó y cómo lo hizo?</h2><p>Revisa la creación con tu escucha. La app guarda lo que se compuso, pero tu observación del proceso es la evidencia.</p></div><button id="c-close-teacher" class="secondary">Ocultar registro</button></div><div class="review-box"><b>Creación guardada${c.title.trim() ? " · «" + escapeHTML(c.title.trim()) + "»" : ""}</b><pre id="c-notation" class="mini-notation">${escapeHTML(notation(r, c))}</pre><div class="criteria"><b>Lo que pedía el reto</b> <span class="small">· tú decides si se logró</span><ul>${r.checks(c.pattern, c).map((x) => `<li>${x.text}</li>`).join("")}</ul></div><span class="small">${c.tempo} ppm · ${notesUsed(r, c)} ${r.type === "rhythm" ? "golpes" : "notas"}</span></div><details><summary>Ver orientación docente</summary><div class="reference"><b>Qué observar</b>${r.observe}<b>Cómo acompañar</b>${r.guide}</div><p>Pregunta antes de sugerir. Registra la ayuda que diste.</p></details>
-<form id="c-form" novalidate><label class="applied-check"><input type="checkbox" id="c-applied" ${c.applied ? "checked" : ""}> Un estudiante de colegio creó esta composición en la app con mi guía.</label><div class="observation-questions">${Object.keys(CREATE_QUESTIONS).map((k) => q(k, c)).join("")}</div><div class="form-columns"><label for="c-observed">¿Qué observaste en el proceso? <span class="optional">· justificación breve requerida</span><textarea id="c-observed" maxlength="600" rows="3" placeholder="Cómo exploró, qué decidió, qué cambió después de escuchar, cómo explicó su creación…">${escapeHTML(c.observed)}</textarea></label><label for="c-improve">¿Qué mejorarías? <span class="optional">· breve; si no propones cambios, indícalo</span><textarea id="c-improve" maxlength="600" rows="3" placeholder="Una pregunta guía, una restricción, más tiempo para explorar…">${escapeHTML(c.improve)}</textarea></label></div><div id="c-form-status" class="form-status" role="status">${evaluatedC(id) ? "Revisión confirmada. Si cambias algo, vuelve a guardar para confirmar." : draftC(id) ? "Borrador recuperado. Completa y confirma tu revisión." : "Completa las tres valoraciones y una observación breve."}</div><div class="actions"><button type="submit">Guardar revisión</button><button type="button" id="c-save-next" class="secondary">Guardar y continuar →</button></div><p class="small" style="margin-top:13px">Si el escolar cambia la creación después de confirmar, la revisión vuelve a borrador.</p></form></section>
-<div class="exercise-footer">${idx ? `<button class="ghost" data-reto="${RETOS[idx - 1].id}">← Anterior</button>` : '<a class="back-link" href="#crear">← Retos</a>'}<span>Reto ${idx + 1} / 6 · <span id="c-status">${statusC(id)}</span></span>${idx < RETOS.length - 1 ? `<button class="secondary" data-reto="${RETOS[idx + 1].id}">Siguiente →</button>` : '<a href="#resultados" class="button">Ver resultados ↗</a>'}</div>`;
+<details class="guide-box"><summary>Guía para el profe</summary><div class="reference"><b>Cómo acompañar</b>${r.guide}</div></details>
+<div class="exercise-footer">${idx ? `<button class="ghost" data-reto="${RETOS[idx - 1].id}">← Anterior</button>` : '<a class="back-link" href="#crear">← Retos</a>'}<span>Reto ${within.indexOf(r) + 1} de 3 · <span id="c-status">${statusC(id)}</span></span>${within.indexOf(r) === within.length - 1 ? `<button class="teacher-toggle" data-rev="${r.group}">Registro docente del bloque →</button>` : `<button class="secondary" data-reto="${RETOS[idx + 1].id}">Siguiente reto →</button>`}</div>`;
   }
   function bindReto(id) {
     const r = RETOS.find((x) => x.id === id), c = rec(id);
     const changed = () => {
-      c.confirmed = false;
+      const v = S()["_rev" + r.group];
+      if (v) v.confirmed = false;
       save();
       $("#seq-checks").innerHTML = checksMarkup(r, c);
       if (r.word) $("#seq-sylcells").innerHTML = hitLabels(r, c);
-      $("#c-notation").textContent = notation(r, c);
       $("#c-status").textContent = statusC(id);
-      if (evaluatedC(id) === false && $("#c-form-status")) $("#c-form-status").textContent = "Creación modificada. Revisa y confirma de nuevo.";
     };
     $$(".seq-cell").forEach((b) => b.addEventListener("click", () => {
       const i = Number(b.dataset.step);
@@ -555,7 +560,7 @@
       changed();
       play(r, c);
     });
-    $("#seq-title").addEventListener("input", (ev) => { c.title = ev.target.value; c.confirmed = false; save(); $("#c-status").textContent = statusC(id); });
+    $("#seq-title").addEventListener("input", (ev) => { c.title = ev.target.value; save(); });
     $("#seq-wav").addEventListener("click", () => exportWAV(r, c));
     $("#seq-clear").addEventListener("click", () => {
       if (notesUsed(r, c) && !window.confirm("¿Borrar toda la creación de este reto?")) return;
@@ -565,43 +570,56 @@
       changed();
     });
     $$("[data-reto]").forEach((b) => b.addEventListener("click", () => navigate("crear-" + b.dataset.reto)));
-    const teacher = (open) => {
-      stop();
-      $("#c-teacher-panel").hidden = !open;
-      $("#c-teacher-toggle").setAttribute("aria-expanded", String(open));
-      if (open) $("#c-teacher-panel").scrollIntoView({ behavior: "smooth", block: "start" });
-      else $("#c-teacher-toggle").focus();
-    };
-    $("#c-teacher-toggle").addEventListener("click", () => teacher($("#c-teacher-panel").hidden));
-    $("#c-close-teacher").addEventListener("click", () => teacher(false));
-    const form = $("#c-form");
+    $$("[data-rev]").forEach((b) => b.addEventListener("click", () => navigate("crear-registro-" + b.dataset.rev)));
+  }
+  // --- registro docente por bloque ---
+  async function listenOnce(r, c, btn) {
+    stop();
+    if (!notesUsed(r, c)) return;
+    try { await ensureAudio(); } catch (e) { toast("No se pudo cargar el audio."); return; }
+    const stepDur = 60 / c.tempo / 4, t0 = ctx.currentTime + 0.05;
+    for (let i = 0; i < r.steps; i++) scheduleStep(ctx, master, r, c.pattern, i, t0 + i * stepDur);
+    btn.disabled = true; btn.textContent = "Sonando…";
+    setTimeout(() => { btn.disabled = false; btn.textContent = "▶ Escuchar"; }, (r.steps * stepDur + 0.4) * 1000);
+  }
+  function registro(g) {
+    const v = rev(g), list = blockRetos(g);
+    return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[g].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">REGISTRO DOCENTE · BLOQUE 0${g + 5}</div><h1 id="create-title" tabindex="-1">${GROUPS[g].title}: ¿qué crearon y cómo?</h1></div></div><p class="objective">Escucha las tres creaciones del bloque, revisa lo que pedía cada reto y registra lo que observaste durante el proceso. La app no califica: tú decides.</p>
+${list.map((r, j) => { const c = rec(r.id); return `<section class="panel review-reto"><div class="review-head"><div><div class="panel-label">RETO ${j + 1} · ${escapeHTML(r.title.toUpperCase())}</div><h3>${c.title.trim() ? "«" + escapeHTML(c.title.trim()) + "»" : "Sin nombre"}</h3></div><div class="actions"><button type="button" class="secondary" data-listen="${r.id}" ${notesUsed(r, c) ? "" : "disabled"}>▶ Escuchar</button><button type="button" class="ghost" data-reto="${r.id}">Abrir reto ↗</button></div></div>${notesUsed(r, c) ? `<pre class="mini-notation">${escapeHTML(notation(r, c))}</pre>` : '<p class="small">Este reto todavía no tiene creación.</p>'}<div class="criteria"><b>Lo que pedía el reto</b> <span class="small">· tú decides si se logró</span><ul>${r.checks(c.pattern, c).map((x) => `<li>${x.text}</li>`).join("")}</ul></div><details><summary>Qué observar</summary><div class="reference">${r.observe}</div></details></section>`; }).join("")}
+<section class="panel teacher-panel"><div class="panel-label">REGISTRO DEL UNIVERSITARIO</div><form id="c-form" novalidate><label class="applied-check"><input type="checkbox" id="c-applied" ${v.applied ? "checked" : ""}> Un estudiante de colegio realizó los retos de este bloque en la app con mi guía.</label><div class="observation-questions">${Object.keys(CREATE_QUESTIONS).map((k) => q(k, v)).join("")}</div><div class="form-columns"><label for="c-observed">¿Qué observaste en el proceso? <span class="optional">· justificación breve requerida</span><textarea id="c-observed" maxlength="800" rows="4" placeholder="Cómo exploró, qué decidió, qué cambió después de escuchar, cómo explicó sus creaciones…">${escapeHTML(v.observed)}</textarea></label><label for="c-improve">¿Qué mejorarías? <span class="optional">· breve; si no propones cambios, indícalo</span><textarea id="c-improve" maxlength="800" rows="4" placeholder="Una pregunta guía, una restricción, más tiempo para explorar…">${escapeHTML(v.improve)}</textarea></label></div><div id="c-form-status" class="form-status" role="status">${evaluatedB(g) ? "Registro confirmado. Si cambias algo, vuelve a guardar para confirmar." : draftB(g) ? "Borrador recuperado. Completa y confirma tu registro." : "Completa las tres valoraciones y una observación breve."}</div><div class="actions"><button type="submit">Guardar registro</button><button type="button" id="c-save-next" class="secondary">${g < GROUPS.length - 1 ? "Guardar y pasar a " + GROUPS[g + 1].title.toLowerCase() + " →" : "Guardar y ver resultados →"}</button></div><p class="small" style="margin-top:13px">Si el escolar cambia una creación después de confirmar, el registro vuelve a borrador.</p></form></section>
+<div class="exercise-footer"><button class="ghost" data-reto="${list[list.length - 1].id}">← Último reto</button><span>Registro del bloque · <span id="c-status">${statusB(g)}</span></span>${g < GROUPS.length - 1 ? `<button class="secondary" data-reto="${blockRetos(g + 1)[0].id}">${GROUPS[g + 1].title} →</button>` : '<a href="#resultados" class="button">Ver resultados ↗</a>'}</div>`;
+  }
+  function bindRegistro(g) {
+    const v = rev(g), form = $("#c-form");
+    $$("[data-reto]").forEach((b) => b.addEventListener("click", () => navigate("crear-" + b.dataset.reto)));
+    $$("[data-listen]").forEach((b) => b.addEventListener("click", () => { const r = RETOS.find((x) => x.id === b.dataset.listen); listenOnce(r, rec(r.id), b); }));
     const read = () => {
-      const before = JSON.stringify([c.applied, c.achievement, c.help, c.technology, c.observed, c.improve]);
-      c.applied = $("#c-applied").checked;
-      for (const k of Object.keys(CHOICE_SETS)) c[k] = $(`input[name="c-${k}"]:checked`, form)?.value || "";
-      c.observed = $("#c-observed").value;
-      c.improve = $("#c-improve").value;
-      if (before !== JSON.stringify([c.applied, c.achievement, c.help, c.technology, c.observed, c.improve])) c.confirmed = false;
+      const before = JSON.stringify([v.applied, v.achievement, v.help, v.technology, v.observed, v.improve]);
+      v.applied = $("#c-applied").checked;
+      for (const k of Object.keys(CHOICE_SETS)) v[k] = $(`input[name="c-${k}"]:checked`, form)?.value || "";
+      v.observed = $("#c-observed").value;
+      v.improve = $("#c-improve").value;
+      if (before !== JSON.stringify([v.applied, v.achievement, v.help, v.technology, v.observed, v.improve])) v.confirmed = false;
       save();
-      $("#c-status").textContent = statusC(id);
+      $("#c-status").textContent = statusB(g);
       $("#c-form-status").classList.remove("error");
-      $("#c-form-status").textContent = evaluatedC(id) ? "Revisión confirmada. No hay cambios pendientes." : "Borrador guardado en este navegador. Confirma con «Guardar revisión».";
+      $("#c-form-status").textContent = evaluatedB(g) ? "Registro confirmado. No hay cambios pendientes." : "Borrador guardado en este navegador. Confirma con «Guardar registro».";
     };
     form.addEventListener("input", read);
     form.addEventListener("change", read);
     const confirmIt = (next) => {
       read();
-      const err = !notesUsed(r, c) ? "La creación está vacía. Primero el escolar debe crear en la cuadrícula."
-        : !c.applied ? "Confirma primero que un estudiante de colegio creó la composición."
-        : Object.keys(CHOICE_SETS).some((k) => !c[k]) ? "Elige una respuesta para cada una de las tres preguntas."
-        : !c.observed.trim() ? "Añade una observación breve que justifique tu revisión." : "";
+      const err = !blockRetos(g).some((r) => createdC(r.id)) ? "Todavía no hay creaciones en este bloque. Primero el escolar debe crear en los retos."
+        : !v.applied ? "Confirma primero que un estudiante de colegio realizó los retos."
+        : Object.keys(CHOICE_SETS).some((k) => !v[k]) ? "Elige una respuesta para cada una de las tres preguntas."
+        : !v.observed.trim() ? "Añade una observación breve que justifique tu registro." : "";
       if (err) { $("#c-form-status").textContent = err; $("#c-form-status").classList.add("error"); return; }
-      c.confirmed = true;
+      v.confirmed = true;
       save();
-      $("#c-status").textContent = statusC(id);
-      $("#c-form-status").textContent = "Revisión guardada y confirmada. Ya aparece en resultados.";
-      toast("Revisión confirmada · " + r.title);
-      if (next) { const i = RETOS.indexOf(r); navigate(i < RETOS.length - 1 ? "crear-" + RETOS[i + 1].id : "resultados"); }
+      $("#c-status").textContent = statusB(g);
+      $("#c-form-status").textContent = "Registro guardado y confirmado. Ya aparece en resultados.";
+      toast("Registro confirmado · " + GROUPS[g].title);
+      if (next) navigate(g < GROUPS.length - 1 ? "crear-" + blockRetos(g + 1)[0].id : "resultados");
     };
     form.addEventListener("submit", (ev) => { ev.preventDefault(); confirmIt(false); });
     $("#c-save-next").addEventListener("click", () => confirmIt(true));
@@ -609,50 +627,59 @@
   function render(hash) {
     const view = $("#create-view");
     const id = hash.startsWith("crear-") ? hash.slice(6) : null;
+    stop();
     if (id && RETOS.some((r) => r.id === id)) { view.innerHTML = reto(id); bindReto(id); }
-    else { view.innerHTML = catalog(); $$("[data-reto]", view).forEach((b) => b.addEventListener("click", () => navigate("crear-" + b.dataset.reto))); }
+    else if (id && /^registro-\d$/.test(id) && GROUPS[Number(id.slice(9))]) { const g = Number(id.slice(9)); view.innerHTML = registro(g); bindRegistro(g); }
+    else { view.innerHTML = catalog(); $$("[data-reto]", view).forEach((b) => b.addEventListener("click", () => navigate("crear-" + b.dataset.reto))); $$("[data-rev]", view).forEach((b) => b.addEventListener("click", () => navigate("crear-registro-" + b.dataset.rev))); }
   }
-  const valid = (hash) => hash === "crear" || (hash.startsWith("crear-") && RETOS.some((r) => r.id === hash.slice(6)));
+  const valid = (hash) => hash === "crear" || (hash.startsWith("crear-") && (RETOS.some((r) => r.id === hash.slice(6)) || /^crear-registro-[01]$/.test(hash)));
   function summaryC() {
-    const done = RETOS.filter((r) => evaluatedC(r.id)).map((r) => S()[r.id]);
-    return { evaluated: done.length, yes: done.filter((c) => c.achievement === "Sí").length, partial: done.filter((c) => c.achievement === "Parcialmente").length, no: done.filter((c) => c.achievement === "No").length };
+    const done = GROUPS.map((_, g) => g).filter(evaluatedB).map((g) => S()["_rev" + g]);
+    return { evaluated: done.length, yes: done.filter((v) => v.achievement === "Sí").length, partial: done.filter((v) => v.achievement === "Parcialmente").length, no: done.filter((v) => v.achievement === "No").length };
   }
+  const createdList = (g) => blockRetos(g).filter((r) => createdC(r.id));
   function resultsMarkup() {
-    const s = summaryC(), list = RETOS.filter((r) => draftC(r.id));
-    return `<h2 style="margin-top:32px">Taller de creación</h2><div class="stats"><div class="stat"><b>${s.evaluated}<small style="font-size:14px;color:var(--muted)"> /6</small></b><span>Creaciones revisadas</span></div><div class="stat"><b>${s.yes}</b><span>Logradas completamente</span></div><div class="stat"><b>${s.partial}</b><span>Logradas parcialmente</span></div><div class="stat"><b>${s.no}</b><span>No logradas</span></div></div>${list.length ? list.map((r) => {
-      const c = S()[r.id], done = evaluatedC(r.id);
-      return `<details class="result-item"><summary><span>${r.title}${c.title.trim() ? " · «" + escapeHTML(c.title.trim()) + "»" : ""}</span><span class="tag ${done ? "aqua" : "coral"}">${done ? "Revisado" : "Borrador"}</span></summary><pre class="mini-notation">${escapeHTML(notation(r, c))}</pre><div class="tags"><span class="tag">Logro: ${escapeHTML(c.achievement || "Pendiente")}</span><span class="tag">Ayuda: ${escapeHTML(c.help || "Pendiente")}</span><span class="tag">App: ${escapeHTML(c.technology || "Pendiente")}</span></div><p><b>Qué observaste:</b> ${escapeHTML(c.observed || "Sin observación registrada.")}</p><p><b>Qué mejorarías:</b> ${escapeHTML(c.improve || "Sin propuesta registrada.")}</p><button class="secondary" data-open-reto="${r.id}">Abrir creación ↗</button></details>`;
-    }).join("") : '<div class="empty">Aún no hay creaciones. Abre el Taller de creación para empezar.</div>'}`;
+    const s = summaryC();
+    return `<h2 style="margin-top:32px">Crea tu música</h2><div class="stats"><div class="stat"><b>${s.evaluated}<small style="font-size:14px;color:var(--muted)"> /2</small></b><span>Registros de bloque confirmados</span></div><div class="stat"><b>${s.yes}</b><span>Logrado</span></div><div class="stat"><b>${s.partial}</b><span>Logrado parcialmente</span></div><div class="stat"><b>${s.no}</b><span>No logrado</span></div></div>${GROUPS.map((g, gi) => {
+      const v = S()["_rev" + gi], list = createdList(gi);
+      if (!list.length && !draftB(gi)) return "";
+      const done = evaluatedB(gi);
+      return `<details class="result-item"><summary><span>${g.title} · ${list.length}/3 creaciones</span><span class="tag ${done ? "aqua" : "coral"}">${done ? "Confirmado" : "Borrador"}</span></summary>${list.map((r) => `<p><b>${r.title}</b>${S()[r.id].title.trim() ? " · «" + escapeHTML(S()[r.id].title.trim()) + "»" : ""}</p><pre class="mini-notation">${escapeHTML(notation(r, S()[r.id]))}</pre>`).join("")}${v ? `<div class="tags"><span class="tag">Logro: ${escapeHTML(v.achievement || "Pendiente")}</span><span class="tag">Ayuda: ${escapeHTML(v.help || "Pendiente")}</span><span class="tag">App: ${escapeHTML(v.technology || "Pendiente")}</span></div><p><b>Qué observaste:</b> ${escapeHTML(v.observed || "Sin observación registrada.")}</p><p><b>Qué mejorarías:</b> ${escapeHTML(v.improve || "Sin propuesta registrada.")}</p>` : ""}<button class="secondary" data-open-rev="${gi}">Abrir registro del bloque ↗</button></details>`;
+    }).join("") || '<div class="empty">Aún no hay creaciones. Abre Crea tu música para empezar.</div>'}`;
   }
-  function bindResults() { $$("[data-open-reto]").forEach((b) => b.addEventListener("click", () => navigate("crear-" + b.dataset.openReto))); }
+  function bindResults() { $$("[data-open-rev]").forEach((b) => b.addEventListener("click", () => navigate("crear-registro-" + b.dataset.openRev))); }
   function reportMarkup() {
-    const s = summaryC(), list = RETOS.filter((r) => draftC(r.id));
-    return `<h2>Taller de creación</h2><p>Composiciones creadas por estudiantes de colegio en la app, con guía del universitario. ${s.evaluated} de 6 revisiones confirmadas.</p><table><thead><tr><th>Bloque</th><th>Reto</th><th>Nombre</th><th>Revisión</th></tr></thead><tbody>${RETOS.map((r) => { const c = S()[r.id]; return `<tr><td>${GROUPS[r.group].title}</td><td>${r.title}</td><td>${escapeHTML(c?.title.trim() || "—")}</td><td>${evaluatedC(r.id) ? "Confirmada" : draftC(r.id) ? "Borrador" : "Pendiente"}</td></tr>`; }).join("")}</tbody></table>${list.map((r) => {
-      const c = S()[r.id];
-      return `<section class="report-exercise"><h3>${GROUPS[r.group].title} · ${r.title}${c.title.trim() ? " · «" + escapeHTML(c.title.trim()) + "»" : ""}</h3><p><b>Objetivo musical:</b> ${r.objective}</p><pre class="mini-notation">${escapeHTML(notation(r, c))}</pre><p><b>Velocidad:</b> ${c.tempo} ppm</p><p><b>¿Logró crear?</b> ${escapeHTML(c.achievement || "Sin registrar")}<br><b>¿Necesitó ayuda?</b> ${escapeHTML(c.help || "Sin registrar")}<br><b>¿La app facilitó?</b> ${escapeHTML(c.technology || "Sin registrar")}</p><p><b>Qué observaste:</b>\n${escapeHTML(c.observed.trim() || "Sin observación registrada.")}</p><p><b>Qué mejorarías:</b>\n${escapeHTML(c.improve.trim() || "Sin propuesta registrada.")}</p></section>`;
+    const s = summaryC();
+    return `<h2>Crea tu música</h2><p>Composiciones creadas por estudiantes de colegio en la app, con guía del universitario. ${s.evaluated} de 2 registros de bloque confirmados.</p><table><thead><tr><th>Bloque</th><th>Creaciones</th><th>Registro</th></tr></thead><tbody>${GROUPS.map((g, gi) => `<tr><td>${g.title}</td><td>${createdList(gi).length} de 3</td><td>${statusB(gi)}</td></tr>`).join("")}</tbody></table>${GROUPS.map((g, gi) => {
+      const v = S()["_rev" + gi], list = createdList(gi);
+      if (!list.length && !draftB(gi)) return "";
+      return `<section class="report-exercise"><h3>${g.title}</h3>${list.map((r) => `<p><b>${r.title}</b>${S()[r.id].title.trim() ? " · «" + escapeHTML(S()[r.id].title.trim()) + "»" : ""} · ${S()[r.id].tempo} ppm</p><pre class="mini-notation">${escapeHTML(notation(r, S()[r.id]))}</pre>`).join("")}<p><b>¿Logró crear?</b> ${escapeHTML(v?.achievement || "Sin registrar")}<br><b>¿Necesitó ayuda?</b> ${escapeHTML(v?.help || "Sin registrar")}<br><b>¿La app facilitó?</b> ${escapeHTML(v?.technology || "Sin registrar")}</p><p><b>Qué observaste:</b>\n${escapeHTML(v?.observed.trim() || "Sin observación registrada.")}</p><p><b>Qué mejorarías:</b>\n${escapeHTML(v?.improve.trim() || "Sin propuesta registrada.")}</p></section>`;
     }).join("")}`;
   }
   function pdf({ heading, para, rule, room, row }) {
-    const s = summaryC(), list = RETOS.filter((r) => draftC(r.id));
+    const s = summaryC();
     room(80);
-    heading("Taller de creación");
-    para("Composiciones creadas por estudiantes de colegio en la app, con guía del universitario. " + s.evaluated + " de 6 revisiones confirmadas.", { size: 9 });
-    row(["Bloque / Reto", "Nombre", "Revisión"], [94, 45, 35], { header: true });
-    RETOS.forEach((r) => { const c = S()[r.id]; row([GROUPS[r.group].title + " / " + r.title, c?.title.trim() || "—", evaluatedC(r.id) ? "Confirmada" : draftC(r.id) ? "Borrador" : "Pendiente"], [94, 45, 35]); });
-    for (const r of list) {
-      const c = S()[r.id];
+    heading("Crea tu música");
+    para("Composiciones creadas por estudiantes de colegio en la app, con guía del universitario. " + s.evaluated + " de 2 registros de bloque confirmados.", { size: 9 });
+    row(["Bloque", "Creaciones", "Registro"], [80, 50, 44], { header: true });
+    GROUPS.forEach((g, gi) => row([g.title, createdList(gi).length + " de 3", statusB(gi)], [80, 50, 44]));
+    GROUPS.forEach((g, gi) => {
+      const v = S()["_rev" + gi], list = createdList(gi);
+      if (!list.length && !draftB(gi)) return;
       room(70);
-      heading(GROUPS[r.group].title + " / " + r.title + (c.title.trim() ? " · «" + c.title.trim() + "»" : ""), 3);
-      para("Objetivo musical: " + r.objective, { size: 9 });
-      para(notation(r, c), { size: 9, ink: [20, 75, 83], mono: true });
-      para("Velocidad: " + c.tempo + " ppm", { size: 9 });
-      para("¿Logró crear? " + (c.achievement || "Sin registrar") + "\n¿Necesitó ayuda? " + (c.help || "Sin registrar") + "\n¿La app facilitó? " + (c.technology || "Sin registrar"), { size: 10, gap: 4 });
+      heading(g.title, 3);
+      for (const r of list) {
+        const c = S()[r.id];
+        para(r.title + (c.title.trim() ? " · «" + c.title.trim() + "»" : "") + " · " + c.tempo + " ppm", { size: 10, gap: 1 });
+        para(notation(r, c), { size: 9, ink: [20, 75, 83], mono: true });
+      }
+      para("¿Logró crear? " + (v?.achievement || "Sin registrar") + "\n¿Necesitó ayuda? " + (v?.help || "Sin registrar") + "\n¿La app facilitó? " + (v?.technology || "Sin registrar"), { size: 10, gap: 4 });
       para("Qué observaste:", { size: 10, gap: 1, ink: [20, 75, 83] });
-      para(c.observed.trim() || "Sin observación registrada.", { indent: 3 });
+      para(v?.observed.trim() || "Sin observación registrada.", { indent: 3 });
       para("Qué mejorarías:", { size: 10, gap: 1, ink: [20, 75, 83] });
-      para(c.improve.trim() || "Sin propuesta registrada.", { indent: 3 });
+      para(v?.improve.trim() || "Sin propuesta registrada.", { indent: 3 });
       rule();
-    }
+    });
   }
   window.TIC_CREATE = { RETOS, clean, render, valid, stop, resultsMarkup, bindResults, reportMarkup, pdf, summary: summaryC };
 })();

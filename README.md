@@ -15,7 +15,7 @@ No se pide programar, usar IA ni crear nuevos recursos educativos. La aplicació
 
 ## Taller de creación (bloques 05 y 06)
 
-Pestaña «Crear» (`#crear`). Seis retos para estudiantes de colegio de 10 a 15 años: tres de creación rítmica (palmas; bombo, caja y palmas; pregunta y respuesta) y tres de creación melódica (Do-Re-Mi; pentatónica que sube y baja; melodía de dos frases con final en Do). El escolar crea en una cuadrícula de pasos dentro de la app, guiado por el universitario; luego el universitario abre el registro, revisa la creación y valora.
+Pestaña «Crear» (`#crear`). Seis retos para estudiantes de colegio de 10 a 15 años: tres de creación rítmica (palmas; bombo, caja y palmas; pregunta y respuesta) y tres de creación melódica (Do-Re-Mi; pentatónica que sube y baja; melodía de dos frases con final en Do). El escolar hace los tres retos de cada bloque en la app, guiado por el universitario. Al final del bloque rítmico y al final del melódico, el universitario abre un registro docente por bloque (`#crear-registro-0` y `#crear-registro-1`), escucha las tres creaciones y registra su valoración.
 
 - Secuenciador propio con Web Audio y las mismas muestras CC0 de la app (Re, Mi, La y Do agudo se obtienen transponiendo la marimba en Do y Sol). Sin servicios externos.
 - Cuadrícula en semicorcheas (16 pasos por compás; los retos de dos partes tienen 2 compases). Bombo pop seco, hi-hat cerrado aportado por el docente y metrónomo de claves de madera que se enciende y apaga.
