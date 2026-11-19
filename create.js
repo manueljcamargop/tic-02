@@ -31,36 +31,55 @@
   const anyOn = (a) => a.some(Boolean);
   const count = (a) => a.filter(Boolean).length;
   const melodyNotes = (p) => (p.melody || []).filter((n) => n !== null && n !== undefined);
+  function syllables(word) {
+    const w = word.toLowerCase().replace(/[^a-záéíóúüñ]/g, "");
+    const V = "aeiouáéíóúü", weak = "iuü", tonic = "íú";
+    let n = 0, prev = "";
+    for (const ch of w) {
+      if (V.includes(ch)) {
+        const diph = prev && (weak.includes(ch) || weak.includes(prev)) && !tonic.includes(ch) && !tonic.includes(prev) && ch !== prev;
+        if (!prev || !diph) n++;
+        prev = ch;
+      } else prev = "";
+    }
+    return n;
+  }
   const RETOS = [
     {
-      id: "cr1", group: 0, type: "rhythm", rows: ["clap"], steps: 16, tempo: 80,
-      title: "Mi patrón de hi-hat",
-      objective: "Crear un patrón rítmico corto con el hi-hat que otra persona pueda escuchar y repetir con palmas.",
-      instruction: "Toca los cuadros para poner golpes de hi-hat. Escucha tu patrón y cámbialo hasta que te guste. Debe poder repetirse con palmas.",
-      checks: (p) => {
-        const n = count(p.clap || []);
+      id: "rn", group: 0, type: "rhythm", rows: ["snare", "clap"], steps: 16, tempo: 76, word: true,
+      title: "Mi nombre en ritmo",
+      objective: "Descubrir que las palabras ya tienen ritmo: cada sílaba es un golpe y la sílaba fuerte se acentúa.",
+      instruction: "Escribe una palabra que te guste: un apodo, un animal o tu comida favorita. Dila en voz alta varias veces. Pon un golpe por cada sílaba: la sílaba que suena más fuerte va con la caja y las demás con el hi-hat.",
+      checks: (p, c) => {
+        const syl = syllables(c.word || "");
+        const total = count(p.snare || []) + count(p.clap || []);
         return [
-          { text: "Pon entre 3 y 6 golpes de hi-hat", ok: n >= 3 && n <= 6 },
-          { text: "Deja algunos cuadros vacíos", ok: n > 0 && n < 16 },
-          { text: "Pon un golpe en el cuadro del número 1", ok: !!(p.clap || [])[0] },
+          { text: "Escribe tu palabra arriba", ok: syl > 0 },
+          { text: syl ? `Pon un golpe por sílaba (tu palabra tiene ${syl})` : "Pon un golpe por sílaba", ok: syl > 0 && total === syl },
+          { text: "La caja suena solo una vez: en la sílaba fuerte", ok: count(p.snare || []) === 1 },
+          { text: "Empieza en el cuadro del número 1", ok: !!((p.snare || [])[0] || (p.clap || [])[0]) },
         ];
       },
-      observe: "Si el escolar escucha su patrón antes de darlo por terminado, si lo puede repetir con palmas y si hace cambios por decisión propia.",
-      guide: "Pide que primero lo escuche completo. Pregunta: «¿lo puedes aplaudir tú?». Si no puede, invita a quitar un golpe. No corrijas el gusto: acompaña la decisión.",
+      observe: "Si dice la palabra con un pulso estable, si identifica la sílaba fuerte y si lo que suena en la app coincide con lo que dice en voz alta.",
+      guide: "Que diga la palabra mientras aplaude. Pregunta: «¿en qué parte de la palabra pones más fuerza?». Activa el bucle y digan la palabra junto con la app. Si el conteo de sílabas de la app no coincide con lo que escuchan, confíen en el oído: la app calcula de forma aproximada.",
     },
     {
-      id: "cr2", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 16, tempo: 84,
-      title: "Tres sonidos",
-      objective: "Combinar tres timbres de percusión en un mismo patrón y distinguir su función.",
-      instruction: "Ahora tienes bombo, caja y hi-hat. Usa los tres sonidos en tu patrón. Escucha qué cambia cuando mueves un golpe de lugar.",
-      checks: (p) => [
-        { text: "Pon al menos un bombo", ok: anyOn(p.kick || []) },
-        { text: "Pon al menos una caja", ok: anyOn(p.snare || []) },
-        { text: "Pon al menos un hi-hat", ok: anyOn(p.clap || []) },
-        { text: "El bombo va en el cuadro del número 1", ok: !!(p.kick || [])[0] },
-      ],
-      observe: "Si diferencia los tres timbres al escuchar, si explica por qué ubicó cada sonido y si su patrón conserva un pulso estable.",
-      guide: "Antes de crear, que escuche cada sonido por separado tocando un cuadro. Pregunta: «¿cuál suena más grave?, ¿dónde lo pondrías?». Puede representar cada sonido con un gesto.",
+      id: "rd", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 16, tempo: 92,
+      base: { kick: [0, 4, 8, 12], snare: [3, 6, 11, 14] },
+      title: "Ritmo de aquí",
+      objective: "Reconocer en la cuadrícula un ritmo urbano conocido (el dembow) y transformarlo en un ritmo propio.",
+      instruction: "El reguetón tiene un ritmo que todos reconocen: el dembow. Toca «Ritmo base» y escúchalo. Después hazlo tuyo: agrega hi-hat, mueve o quita golpes, hasta que suene a ti.",
+      checks: (p) => {
+        const on = (k, i) => !!(p[k] || [])[i];
+        const changed = ["kick", "snare", "clap"].some((k) => (p[k] || []).some((v, i) => v !== ((k === "kick" && [0, 4, 8, 12].includes(i)) || (k === "snare" && [3, 6, 11, 14].includes(i)))));
+        return [
+          { text: "El bombo suena en los cuatro números", ok: [0, 4, 8, 12].every((i) => on("kick", i)) },
+          { text: "La caja suena entre los números", ok: (p.snare || []).some((v, i) => v && i % 4 !== 0) },
+          { text: "Le agregaste o cambiaste algo tuyo", ok: changed && anyOn([].concat(p.kick || [], p.snare || [], p.clap || [])) },
+        ];
+      },
+      observe: "Si reconoce el ritmo base al escucharlo, si sus cambios mantienen el pulso del bombo y si puede explicar qué cambió y por qué.",
+      guide: "Antes de cargar el ritmo base, pregunta qué música escuchan. Si prefieren cumbia o champeta, pueden construirla desde cero en lugar del dembow. Pide que muevan el cuerpo con el bombo: ese es el pulso. Luego: «¿qué le pondrías para que suene diferente?».",
     },
     {
       id: "cr3", group: 0, type: "rhythm", rows: ["kick", "snare", "clap"], steps: 32, tempo: 84,
@@ -146,7 +165,7 @@
       ? Object.fromEntries(r.rows.map((k) => [k, Array(r.steps).fill(false)]))
       : { melody: Array(r.steps).fill(null) };
   const blankCreation = (r) => ({
-    pattern: blankPattern(r), tempo: r.tempo, title: "",
+    pattern: blankPattern(r), tempo: r.tempo, title: "", word: "",
     applied: false, achievement: "", help: "", technology: "", observed: "", improve: "", confirmed: false,
   });
   const txt = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
@@ -175,6 +194,7 @@
       }
       if (Number.isFinite(c.tempo)) o.tempo = Math.min(120, Math.max(60, Math.round(c.tempo)));
       o.title = txt(c.title, 80);
+      o.word = txt(c.word, 30);
       o.applied = c.applied === true;
       o.confirmed = c.confirmed === true;
       for (const k of Object.keys(CHOICE_SETS)) if (CHOICE_SETS[k].includes(c[k])) o[k] = c[k];
@@ -194,7 +214,7 @@
   const statusC = (id) => (evaluatedC(id) ? "Evaluado" : draftC(id) ? "Borrador" : "Por crear");
   function notation(r, c) {
     if (r.type === "rhythm")
-      return r.rows.map((k) => {
+      return (r.word && c.word && c.word.trim() ? "Palabra: " + c.word.trim() + " (" + syllables(c.word) + " sílabas)\n" : "") + r.rows.map((k) => {
         const d = DRUMS.find((x) => x.key === k);
         const cells = c.pattern[k].map((on) => (on ? "X" : "·"));
         const groups = [];
@@ -379,7 +399,7 @@
     return `<div class="seq-wrap"><div class="seq ${r.type}" style="--steps:${r.steps}" data-steps="${r.steps}" role="group" aria-label="Cuadrícula de creación: ${r.steps} pasos">${parts}${header}${rows.join("")}</div></div>`;
   }
   function checksMarkup(r, c) {
-    return r.checks(c.pattern).map((x) => `<li class="${x.ok ? "ok" : ""}"><span aria-hidden="true">${x.ok ? "✓" : "○"}</span>${x.text}<span class="sr-only">${x.ok ? " · conseguido" : " · pendiente"}</span></li>`).join("");
+    return r.checks(c.pattern, c).map((x) => `<li class="${x.ok ? "ok" : ""}"><span aria-hidden="true">${x.ok ? "✓" : "○"}</span>${x.text}<span class="sr-only">${x.ok ? " · conseguido" : " · pendiente"}</span></li>`).join("");
   }
   function q(k, c) {
     return `<fieldset><legend>${CREATE_QUESTIONS[k]}</legend><div class="options">${CHOICE_SETS[k].map((v) => `<label class="option"><input type="radio" name="c-${k}" value="${escapeHTML(v)}" ${c[k] === v ? "checked" : ""}>${v}</label>`).join("")}</div></fieldset>`;
@@ -388,8 +408,8 @@
     const r = RETOS.find((x) => x.id === id), c = rec(id);
     const idx = RETOS.indexOf(r), within = RETOS.filter((x) => x.group === r.group);
     return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[r.group].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">RETO ${within.indexOf(r) + 1} DE 3 · BLOQUE 0${r.group + 5}</div><h1 id="create-title" tabindex="-1">${r.title}</h1></div><nav class="mini-progress" aria-label="Retos de este bloque">${within.map((x, j) => `<a href="#crear-${x.id}" ${x.id === id ? 'aria-current="step" class="active"' : ""} aria-label="Reto ${j + 1}: ${x.title}">${j + 1}</a>`).join("")}</nav></div><p class="objective"><b>Objetivo musical:</b> ${r.objective}</p>
-<section class="panel student-panel"><div class="panel-label"><b>01</b> MOMENTO DEL ESTUDIANTE DE COLEGIO · CREA CON TU GUÍA</div><p class="instruction">${r.instruction}</p><p class="small">Toca el nombre de cada ${r.type === "rhythm" ? "sonido para escucharlo solo" : "nota para escucharla sola"}. Los números marcan los tiempos.</p>${grid(r, c)}
-<div class="seq-buttons"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><button type="button" id="seq-loop" class="toggle-btn" aria-pressed="${loopOn}" title="Repetir en bucle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Bucle</span></button><button type="button" id="seq-metro" class="toggle-btn" aria-pressed="${metroOn}" title="Metrónomo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l6-10"/><path d="M7.5 16h9"/></svg><span>Metrónomo</span></button><button type="button" id="seq-clear" class="clear-btn">✕ Borrar todo</button></div><div class="listening-controls seq-controls"><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
+<section class="panel student-panel"><div class="panel-label"><b>01</b> MOMENTO DEL ESTUDIANTE DE COLEGIO · CREA CON TU GUÍA</div><p class="instruction">${r.instruction}</p><p class="small">Toca el nombre de cada ${r.type === "rhythm" ? "sonido para escucharlo solo" : "nota para escucharla sola"}. Los números marcan los tiempos.</p>${r.word ? `<div class="word-box"><label for="seq-word">Tu palabra</label><input id="seq-word" maxlength="30" autocomplete="off" value="${escapeHTML(c.word)}" placeholder="Ej.: mariposa, arepa, Lucho…"><span id="seq-syl" class="syl">${c.word && syllables(c.word) ? syllables(c.word) + " sílabas" : ""}</span></div>` : ""}${grid(r, c)}
+<div class="seq-buttons"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><button type="button" id="seq-loop" class="toggle-btn" aria-pressed="${loopOn}" title="Repetir en bucle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Bucle</span></button><button type="button" id="seq-metro" class="toggle-btn" aria-pressed="${metroOn}" title="Metrónomo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l6-10"/><path d="M7.5 16h9"/></svg><span>Metrónomo</span></button>${r.base ? '<button type="button" id="seq-base" class="toggle-btn base-btn">⤓ Ritmo base</button>' : ""}<button type="button" id="seq-clear" class="clear-btn">✕ Borrar todo</button></div><div class="listening-controls seq-controls"><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
 <div id="seq-status" class="audio-status" role="status">Listo para crear</div>
 <div class="create-side"><div class="hints"><b>Pistas del reto</b><ul id="seq-checks">${checksMarkup(r, c)}</ul><p class="small">Las pistas orientan; no son una calificación. Una creación puede ser valiosa aunque no las cumpla todas.</p></div><div class="hints"><b>Nombre de la creación</b><label for="seq-title" class="sr-only">Nombre de la creación</label><input id="seq-title" maxlength="80" value="${escapeHTML(c.title)}" placeholder="Ej.: «Tambores del recreo»"><p class="small">Que el escolar le ponga nombre. No escribas su nombre ni datos personales.</p><div class="actions"><button type="button" id="seq-wav" class="secondary">Descargar audio (.wav)</button></div></div></div></section>
 <div class="activity-actions"><p>Cuando el escolar termine y la haya escuchado, abre tu registro para revisar la creación. La orientación docente permanece oculta durante la actividad.</p><button id="c-teacher-toggle" class="teacher-toggle" aria-expanded="false" aria-controls="c-teacher-panel">Abrir registro docente <span aria-hidden="true">↗</span></button></div>
@@ -448,6 +468,20 @@
       $("#seq-volume-value").textContent = state.volume + " %";
       if (master) master.gain.value = state.volume / 100;
       save();
+    });
+    if (r.word) $("#seq-word").addEventListener("input", (ev) => {
+      c.word = ev.target.value;
+      const n = syllables(c.word);
+      $("#seq-syl").textContent = n ? n + (n === 1 ? " sílaba" : " sílabas") : "";
+      changed();
+    });
+    if (r.base) $("#seq-base").addEventListener("click", () => {
+      if (notesUsed(r, c) && !window.confirm("¿Reemplazar lo que hay en la cuadrícula por el ritmo base?")) return;
+      c.pattern = blankPattern(r);
+      for (const [k, steps] of Object.entries(r.base)) steps.forEach((i) => (c.pattern[k][i] = true));
+      $$(".seq-cell").forEach((b) => b.setAttribute("aria-pressed", String(!!c.pattern[b.dataset.k][Number(b.dataset.step)])));
+      changed();
+      play(r, c);
     });
     $("#seq-title").addEventListener("input", (ev) => { c.title = ev.target.value; c.confirmed = false; save(); $("#c-status").textContent = statusC(id); });
     $("#seq-wav").addEventListener("click", () => exportWAV(r, c));

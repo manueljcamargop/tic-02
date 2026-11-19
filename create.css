@@ -96,3 +96,8 @@
 .seq-cell.beat{border-left:2px solid #5d6f8f}
 .seq-num{align-self:end}
 @media (max-width:700px){.seq[data-steps="16"] .seq-row{grid-template-columns:74px repeat(16,30px)}.seq[data-steps="32"] .seq-row{grid-template-columns:74px repeat(32,26px)}.seq[data-steps="32"] .seq-parts{grid-template-columns:74px 1fr 1fr}}
+.word-box{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 4px;padding:14px 16px;border-radius:14px;background:#101a2d;border:1px solid var(--line)}
+.word-box label{font-weight:800;font-size:16px}
+.word-box input{flex:1;min-width:200px;font-size:20px;font-weight:700;padding:10px 14px}
+.word-box .syl{color:var(--aqua);font-weight:800;font-size:16px}
+.base-btn{color:var(--aqua);border-color:#3f8f84}
