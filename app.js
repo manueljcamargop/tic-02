@@ -49,7 +49,7 @@ function route(){const hash=location.hash.slice(1)||'inicio';stopAll();$$('#home
  else{$('#home-view').hidden=false;$('[data-route="inicio"]').setAttribute('aria-current','page');}
  const active=EX.find(e=>e.id===state.active);$$('[data-block]').forEach(a=>a.classList.toggle('active',hash.startsWith('ejercicio-')?Number(a.dataset.block)===active.block:hash==='bloque-'+(Number(a.dataset.block)+1)));
  updateProgress();
- requestAnimationFrame(()=>{if(hash.startsWith('bloque-')){$('#block-'+hash.slice(7))?.scrollIntoView({behavior:'smooth'});}else if(focus){focus.focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}else window.scrollTo({top:0,behavior:'instant'});});
+ requestAnimationFrame(()=>{if(hash.startsWith('bloque-')){$('#block-'+hash.slice(7))?.scrollIntoView({behavior:'smooth'});}else if(focus){focus.focus({preventScroll:true});const sec=focus.closest('main > section, section[id$="-view"]');if(window.matchMedia('(max-width:900px)').matches&&sec&&sec.id!=='home-view')sec.scrollIntoView({behavior:'instant',block:'start'});else window.scrollTo({top:0,behavior:'instant'});}else window.scrollTo({top:0,behavior:'instant'});});
 }
 function navigate(hash){if(location.hash==='#'+hash)route();else location.hash=hash;}
 window.addEventListener('hashchange',route);
