@@ -257,7 +257,7 @@
     }
   }
   function click(c, dest, time, accent) {
-    hit(c, dest, accent ? "claveHi" : "clave", 1, time, accent ? 0.75 : 0.5);
+    hit(c, dest, accent ? "claveHi" : "clave", accent ? 1.5 : 1, time, accent ? 1 : 0.38);
   }
   async function preview(r, key, rate) {
     try { await ensureAudio(); hit(ctx, master, key, rate, ctx.currentTime + 0.01, 0.9); } catch (e) {}
