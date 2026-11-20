@@ -21,6 +21,8 @@ La reproducción de bucles en controles HTML nativos puede variar ligeramente en
 
 - **Bombo pop (`kick-pop.wav`):** sonido aportado por Manuel J. Camargo para esta app. Convertido a mono, 16 bit, con recorte a 0,32 s y fundido final; sin otro procesamiento.
 - **Caja (`snare-pop.wav`):** sonido aportado por Manuel J. Camargo para esta app. Convertido a mono, 16 bit, con recorte y fundido final; sin otro procesamiento.
+- **Tambora colombiana, parche y palito (`tambora-parche.wav`, `tambora-palito.wav`):** samples de Manuel J. Camargo (de su colección `08_TAMBORA_01.wav` y `11_TAMBORA_04.wav`). Convertidos a mono, 16 bit, con recorte y fundido final; sin otro procesamiento.
+- **Ritmo guía de cumbia (`tambora-cumbia-guia.wav`):** grabación de tambora de Manuel J. Camargo (`Tambora_cumbia_85_bpm.wav`), convertida a mono, 44,1 kHz y 16 bit.
 - **Hi-hat cerrado (`hat.wav`):** sonido aportado por Manuel J. Camargo para esta app. Convertido a mono, 16 bit, con recorte y fundido final; sin otro procesamiento.
 - **Metrónomo (`clave.wav`, `clave-hi.wav`):** claves de madera de VCSL, `Claves1_Hit_v2_rr1_Mid.wav` (tiempos) y `Claves1_Hit_v3_rr1_Mid.wav` (primer tiempo del compás).
 - Conversión a WAV PCM mono, 16 bit, 44,1 kHz, recorte del silencio inicial y fundido final. Licencia CC0. Las mismas muestras van incrustadas en `assets/audio/samples.js`.

@@ -24,6 +24,11 @@ Pestaña «Crear» (`#crear`). Seis retos para estudiantes de colegio de 10 a 15
 - Las creaciones se guardan en el mismo registro local (`creations`), aparecen en Resultados, en el informe HTML y PDF (con notación de cuadrícula) y en el respaldo JSON. Los respaldos anteriores siguen siendo compatibles.
 - Archivos: `create.js` y `create.css`.
 
+### Retos actuales
+
+- **Creación rítmica (4):** Mi nombre en ritmo (sílabas y acento prosódico, con corrección del profesor) · Ritmo de aquí (dembow) · Pregunta y respuesta · Ritmo de cumbia (tambora real: palito y parche, con ritmo guía grabado).
+- **Creación melódica (3):** Tres notas · Sube y baja · Melodía con final.
+
 ## Estructura conservada y cambios
 
 Se conservaron HTML/CSS/JavaScript estáticos, archivos relativos, controles de audio nativos, avisos de estado, navegación por vistas, guardado local, validación de respaldos y descarga mediante archivos locales. Se reemplazó el contenido de diseño de proyectos por 12 ejercicios aplicables, se rediseñó la identidad visual y se añadió observación docente, resumen e informe.

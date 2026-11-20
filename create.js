@@ -14,11 +14,14 @@
     { key: "kick", name: "Bombo", hint: "grave" },
     { key: "snare", name: "Caja", hint: "seco" },
     { key: "clap", name: "Hi-hat", hint: "cerrado" },
+    { key: "tparche", name: "Parche", hint: "tambora" },
+    { key: "tpalito", name: "Palito", hint: "tambora" },
   ];
   const FILES = {
     kick: "kick-pop.wav",
     snare: "snare-pop.wav",
     hat: "hat.wav",
+    tparche: "tambora-parche.wav", tpalito: "tambora-palito.wav",
     clave: "clave.wav", claveHi: "clave-hi.wav",
     marimba: "marimba-c.wav",
     marimbaG: "marimba-g.wav",
@@ -150,6 +153,26 @@
       },
       observe: "Si explica en qué se parecen y en qué se diferencian sus dos partes, y si la respuesta guarda relación con la pregunta.",
       guide: "Una estrategia: copiar la pregunta en la parte 2 y cambiar solo uno o dos golpes. Pide que lo diga con palabras: «mi respuesta cambia al final».",
+    },
+    {
+      id: "rc", group: 0, type: "rhythm", rows: ["tpalito", "tparche"], steps: 16, tempo: 85,
+      guideAudio: "assets/audio/tambora-cumbia-guia.wav",
+      base: { tpalito: [0, 2, 3, 4, 6, 7, 8, 10, 11, 12], tparche: [14] },
+      title: "Ritmo de cumbia",
+      objective: "Reconocer el ritmo de la tambora en la cumbia colombiana, representarlo en la cuadrícula y transformarlo en un ritmo propio.",
+      instruction: "La cumbia es nuestra. Escucha el ritmo guía: es una tambora de verdad. Luego toca «Ritmo base» y compara: el palito hace el «chá-chiki» y el parche da el golpe fuerte justo antes del 1. Después hazlo tuyo: cambia, quita o agrega golpes.",
+      checks: (p) => {
+        const B = { tpalito: [0, 2, 3, 4, 6, 7, 8, 10, 11, 12], tparche: [14] };
+        const changed = Object.keys(B).some((k) => (p[k] || []).some((v, i) => v !== B[k].includes(i)));
+        return [
+          { text: "Escucha el ritmo guía y compáralo con el ritmo base", ok: true },
+          { text: "El palito lleva el «chá-chiki»", ok: count(p.tpalito || []) >= 6 },
+          { text: "El parche suena fuerte, pocas veces", ok: count(p.tparche || []) >= 1 && count(p.tparche || []) <= 3 },
+          { text: "Le agregaste o cambiaste algo tuyo", ok: changed && anyOn([].concat(p.tpalito || [], p.tparche || [])) },
+        ];
+      },
+      observe: "Si reconoce el ritmo de la tambora al escuchar la guía, si relaciona lo que oye con lo que ve en la cuadrícula y si sus cambios conservan el carácter de la cumbia.",
+      guide: "Primero solo escuchen la guía y muevan el cuerpo. Pregunta: «¿cuál golpe suena más grave y fuerte?» (el parche). Pide que digan «chá-chiki» con el palito mientras suena. Luego carguen el ritmo base y comparen con la grabación: ¿suenan igual? ¿qué cambia?",
     },
     {
       id: "cm1", group: 1, type: "melody", notes: [0, 1, 2], steps: 16, tempo: 72,
@@ -287,7 +310,7 @@
     return "| " + groups.join(" | ") + " |";
   }
   // --- audio ---
-  let clapRR = 0, ctx = null, master = null, buffers = {}, loading = null, player = null, loopOn = false, metroOn = false;
+  let guideEl = null, clapRR = 0, ctx = null, master = null, buffers = {}, loading = null, player = null, loopOn = false, metroOn = false;
   function decode(ab) {
     return new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
   }
@@ -329,7 +352,7 @@
   }
   function scheduleStep(c, dest, r, pat, step, time) {
     if (r.type === "rhythm") {
-      for (const k of r.rows) if (pat[k][step]) hit(c, dest, k, 1, time, k === "clap" ? 0.7 : 0.85);
+      for (const k of r.rows) if (pat[k][step]) hit(c, dest, k, 1, time, k === "clap" ? 0.7 : k === "tpalito" ? 0.75 : 0.85);
     } else {
       const n = pat.melody[step];
       if (n !== null && n !== undefined) hit(c, dest, NOTES[n].sample, NOTES[n].rate, time, 0.95);
@@ -341,7 +364,13 @@
   async function preview(r, key, rate) {
     try { await ensureAudio(); hit(ctx, master, key, rate, ctx.currentTime + 0.01, 0.9); } catch (e) {}
   }
+  function stopGuide() {
+    if (guideEl && !guideEl.paused) { guideEl.pause(); guideEl.currentTime = 0; }
+    const g = document.getElementById("seq-guide");
+    if (g) { g.setAttribute("aria-pressed", "false"); g.textContent = "🎧 Escuchar ritmo guía"; }
+  }
   function stop() {
+    stopGuide();
     if (!player) return;
     clearInterval(player.timer);
     cancelAnimationFrame(player.raf);
@@ -436,12 +465,12 @@
   function catalog() {
     const blocks = GROUPS.map((g, gi) => {
       const list = blockRetos(gi);
-      return `<section class="block-section create-block"><div class="block-header"><h3><span>0${gi + 5}</span>${g.title}</h3><small>${list.filter((r) => createdC(r.id)).length}/3 creados · registro: ${statusB(gi)}</small></div><div class="exercise-grid">${list.map((r, j) => {
+      return `<section class="block-section create-block"><div class="block-header"><h3><span>0${gi + 5}</span>${g.title}</h3><small>${list.filter((r) => createdC(r.id)).length}/${list.length} creados · registro: ${statusB(gi)}</small></div><div class="exercise-grid">${list.map((r, j) => {
         const c = S()[r.id];
-        return `<article class="exercise-card create-card"><div class="card-meta"><span>Reto 0${j + 1} / 03</span><span class="${createdC(r.id) ? "done" : ""}">${statusC(r.id)}</span></div><h4>${r.title}</h4><p>${r.objective}</p>${c && notesUsed(r, c) ? `<pre class="mini-notation" aria-label="Creación guardada">${escapeHTML(notation(r, c))}</pre>` : ""}<button data-reto="${r.id}">Abrir reto <span aria-hidden="true">↗</span></button></article>`;
-      }).join("")}</div><div class="block-review"><p><b>Registro docente · ${g.title}</b> Al terminar los tres retos, revisas las creaciones y registras lo que observaste.</p><button class="teacher-toggle" data-rev="${gi}">Abrir registro del bloque <span aria-hidden="true">↗</span></button></div></section>`;
+        return `<article class="exercise-card create-card"><div class="card-meta"><span>Reto 0${j + 1} / 0${list.length}</span><span class="${createdC(r.id) ? "done" : ""}">${statusC(r.id)}</span></div><h4>${r.title}</h4><p>${r.objective}</p>${c && notesUsed(r, c) ? `<pre class="mini-notation" aria-label="Creación guardada">${escapeHTML(notation(r, c))}</pre>` : ""}<button data-reto="${r.id}">Abrir reto <span aria-hidden="true">↗</span></button></article>`;
+      }).join("")}</div><div class="block-review"><p><b>Registro docente · ${g.title}</b> Al terminar los ${list.length} retos, revisas las creaciones y registras lo que observaste.</p><button class="teacher-toggle" data-rev="${gi}">Abrir registro del bloque <span aria-hidden="true">↗</span></button></div></section>`;
     }).join("");
-    return `<div class="eyebrow"><span class="status-dot"></span> CREAR · ESCUCHAR · REVISAR</div><div class="hero create-hero"><div><h1 id="create-title" tabindex="-1">Ahora ellos<br><em>componen.</em></h1><p class="lead">Seis retos para que estudiantes de colegio de 10 a 15 años creen ritmos y melodías en la app, con tu guía. Al final de cada bloque revisas sus creaciones y registras lo que observaste.</p><button data-reto="${RETOS[0].id}">Abrir primer reto <span aria-hidden="true">↗</span></button></div><div class="hero-art create-art" aria-hidden="true">${[...Array(32)].map((_, i) => `<i class="${[0, 3, 6, 9, 12, 13, 18, 21, 26, 28, 31].includes(i) ? "on" : ""}"></i>`).join("")}<div class="art-label">CREACIÓN GUIADA / REVISIÓN DOCENTE</div></div></div><div class="journey" aria-label="Recorrido del taller"><span><b>01</b> Explora</span><span><b>02</b> Crea</span><span><b>03</b> Escucha</span><span><b>04</b> Ajusta</span><span><b>05</b> Revisa</span></div><div class="notice"><span aria-hidden="true">◎</span><p><b>El escolar toma el control; tú guías.</b> Deja que toque la pantalla, escuche y decida. Pregunta en vez de corregir. La app no califica. Al terminar los tres retos de cada bloque, abre el registro docente del bloque.</p></div>${blocks}<div class="notice"><span aria-hidden="true">↻</span><p><b>Lo creado vuelve al aula.</b> Cada creación puede descargarse en audio y usarse como modelo de los ejercicios de imitación y análisis: lo que compone un estudiante lo imitan sus compañeros.</p></div>`;
+    return `<div class="eyebrow"><span class="status-dot"></span> CREAR · ESCUCHAR · REVISAR</div><div class="hero create-hero"><div><h1 id="create-title" tabindex="-1">Ahora ellos<br><em>componen.</em></h1><p class="lead">${RETOS.length === 6 ? "Seis" : RETOS.length === 7 ? "Siete" : RETOS.length} retos para que estudiantes de colegio de 10 a 15 años creen ritmos y melodías en la app, con tu guía. Al final de cada bloque revisas sus creaciones y registras lo que observaste.</p><button data-reto="${RETOS[0].id}">Abrir primer reto <span aria-hidden="true">↗</span></button></div><div class="hero-art create-art" aria-hidden="true">${[...Array(32)].map((_, i) => `<i class="${[0, 3, 6, 9, 12, 13, 18, 21, 26, 28, 31].includes(i) ? "on" : ""}"></i>`).join("")}<div class="art-label">CREACIÓN GUIADA / REVISIÓN DOCENTE</div></div></div><div class="journey" aria-label="Recorrido del taller"><span><b>01</b> Explora</span><span><b>02</b> Crea</span><span><b>03</b> Escucha</span><span><b>04</b> Ajusta</span><span><b>05</b> Revisa</span></div><div class="notice"><span aria-hidden="true">◎</span><p><b>El escolar toma el control; tú guías.</b> Deja que toque la pantalla, escuche y decida. Pregunta en vez de corregir. La app no califica. Al terminar los retos de cada bloque, abre el registro docente del bloque.</p></div>${blocks}<div class="notice"><span aria-hidden="true">↻</span><p><b>Lo creado vuelve al aula.</b> Cada creación puede descargarse en audio y usarse como modelo de los ejercicios de imitación y análisis: lo que compone un estudiante lo imitan sus compañeros.</p></div>`;
   }
   function grid(r, c) {
     const cols = [...Array(r.steps).keys()];
@@ -481,13 +510,13 @@
   function reto(id) {
     const r = RETOS.find((x) => x.id === id), c = rec(id);
     const idx = RETOS.indexOf(r), within = RETOS.filter((x) => x.group === r.group);
-    return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[r.group].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">RETO ${within.indexOf(r) + 1} DE 3 · BLOQUE 0${r.group + 5}</div><h1 id="create-title" tabindex="-1">${r.title}</h1></div><nav class="mini-progress" aria-label="Retos de este bloque">${within.map((x, j) => `<a href="#crear-${x.id}" ${x.id === id ? 'aria-current="step" class="active"' : ""} aria-label="Reto ${j + 1}: ${x.title}">${j + 1}</a>`).join("")}</nav></div><p class="objective"><b>Objetivo musical:</b> ${r.objective}</p>
+    return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[r.group].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">RETO ${within.indexOf(r) + 1} DE ${within.length} · BLOQUE 0${r.group + 5}</div><h1 id="create-title" tabindex="-1">${r.title}</h1></div><nav class="mini-progress" aria-label="Retos de este bloque">${within.map((x, j) => `<a href="#crear-${x.id}" ${x.id === id ? 'aria-current="step" class="active"' : ""} aria-label="Reto ${j + 1}: ${x.title}">${j + 1}</a>`).join("")}</nav></div><p class="objective"><b>Objetivo musical:</b> ${r.objective}</p>
 <section class="panel student-panel"><div class="panel-label"><b>01</b> MOMENTO DEL ESTUDIANTE DE COLEGIO · CREA CON TU GUÍA</div><p class="instruction">${r.instruction}</p><p class="small">Toca el nombre de cada ${r.type === "rhythm" ? "sonido para escucharlo solo" : "nota para escucharla sola"}. Los números marcan los tiempos.</p>${r.word ? `<div class="word-box"><label for="seq-word">Tu palabra</label><input id="seq-word" maxlength="30" autocomplete="off" value="${escapeHTML(c.word)}" placeholder="Ej.: mariposa, arepa, Lucho…"><div class="syl-chips" id="seq-syl">${chips(c)}</div></div>` : ""}${grid(r, c)}
-<div class="seq-buttons"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><button type="button" id="seq-loop" class="toggle-btn" aria-pressed="${loopOn}" title="Repetir en bucle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Bucle</span></button><button type="button" id="seq-metro" class="toggle-btn" aria-pressed="${metroOn}" title="Metrónomo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l6-10"/><path d="M7.5 16h9"/></svg><span>Metrónomo</span></button>${r.base ? '<button type="button" id="seq-base" class="toggle-btn base-btn">⤓ Ritmo base</button>' : ""}<button type="button" id="seq-clear" class="clear-btn">✕ Borrar todo</button></div><div class="listening-controls seq-controls"><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
+<div class="seq-buttons"><button type="button" id="seq-play">▶ Escuchar creación</button><button type="button" id="seq-stop" class="secondary">■ Detener</button><button type="button" id="seq-loop" class="toggle-btn" aria-pressed="${loopOn}" title="Repetir en bucle"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg><span>Bucle</span></button><button type="button" id="seq-metro" class="toggle-btn" aria-pressed="${metroOn}" title="Metrónomo"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5z"/><path d="M12 16l6-10"/><path d="M7.5 16h9"/></svg><span>Metrónomo</span></button>${r.guideAudio ? '<button type="button" id="seq-guide" class="toggle-btn guide-btn" aria-pressed="false">🎧 Escuchar ritmo guía</button>' : ""}${r.base ? '<button type="button" id="seq-base" class="toggle-btn base-btn">⤓ Ritmo base</button>' : ""}<button type="button" id="seq-clear" class="clear-btn">✕ Borrar todo</button></div><div class="listening-controls seq-controls"><label for="seq-tempo">Velocidad <input id="seq-tempo" type="range" min="60" max="120" step="2" value="${c.tempo}"><output id="seq-tempo-value" for="seq-tempo">${c.tempo} ppm</output></label><label for="seq-volume">Volumen <input id="seq-volume" type="range" min="0" max="100" value="${state.volume}"><output id="seq-volume-value" for="seq-volume">${state.volume} %</output></label><label><input type="checkbox" id="seq-gap"> Dejar silencio para imitar</label></div>
 <div id="seq-status" class="audio-status" role="status">Listo para crear</div>
 <div class="create-side"><div class="hints"><b>Lo que pide el reto</b><ul id="seq-checks">${checksMarkup(r, c)}</ul><p class="small">La app no califica. Cuando termine, el profe escucha la creación y decide en su registro.</p></div><div class="hints"><b>Nombre de la creación</b><label for="seq-title" class="sr-only">Nombre de la creación</label><input id="seq-title" maxlength="80" value="${escapeHTML(c.title)}" placeholder="Ej.: «Tambores del recreo»"><p class="small">Que el escolar le ponga nombre. No escribas su nombre ni datos personales.</p><div class="actions"><button type="button" id="seq-wav" class="secondary">Descargar audio (.wav)</button></div></div></div></section>
 <details class="guide-box"><summary>Guía para el profe</summary><div class="reference"><b>Cómo acompañar</b>${r.guide}</div></details>
-<div class="exercise-footer">${idx ? `<button class="ghost" data-reto="${RETOS[idx - 1].id}">← Anterior</button>` : '<a class="back-link" href="#crear">← Retos</a>'}<span>Reto ${within.indexOf(r) + 1} de 3 · <span id="c-status">${statusC(id)}</span></span>${within.indexOf(r) === within.length - 1 ? `<button class="teacher-toggle" data-rev="${r.group}">Registro docente del bloque →</button>` : `<button class="secondary" data-reto="${RETOS[idx + 1].id}">Siguiente reto →</button>`}</div>`;
+<div class="exercise-footer">${idx ? `<button class="ghost" data-reto="${RETOS[idx - 1].id}">← Anterior</button>` : '<a class="back-link" href="#crear">← Retos</a>'}<span>Reto ${within.indexOf(r) + 1} de ${within.length} · <span id="c-status">${statusC(id)}</span></span>${within.indexOf(r) === within.length - 1 ? `<button class="teacher-toggle" data-rev="${r.group}">Registro docente del bloque →</button>` : `<button class="secondary" data-reto="${RETOS[idx + 1].id}">Siguiente reto →</button>`}</div>`;
   }
   function bindReto(id) {
     const r = RETOS.find((x) => x.id === id), c = rec(id);
@@ -552,6 +581,19 @@
       });
       bindChips();
     }
+    if (r.guideAudio) {
+      const btn = $("#seq-guide");
+      const end = () => { btn.setAttribute("aria-pressed", "false"); btn.textContent = "🎧 Escuchar ritmo guía"; };
+      btn.addEventListener("click", () => {
+        if (guideEl && !guideEl.paused) { guideEl.pause(); guideEl.currentTime = 0; end(); return; }
+        stop();
+        if (!guideEl) guideEl = new Audio();
+        guideEl.src = r.guideAudio;
+        guideEl.volume = Math.max(0, Math.min(1, (state.volume ?? 65) / 100));
+        guideEl.onended = end;
+        guideEl.play().then(() => { btn.setAttribute("aria-pressed", "true"); btn.textContent = "■ Detener ritmo guía"; }).catch(() => toast("No se pudo reproducir el ritmo guía."));
+      });
+    }
     if (r.base) $("#seq-base").addEventListener("click", () => {
       if (notesUsed(r, c) && !window.confirm("¿Reemplazar lo que hay en la cuadrícula por el ritmo base?")) return;
       c.pattern = blankPattern(r);
@@ -584,7 +626,7 @@
   }
   function registro(g) {
     const v = rev(g), list = blockRetos(g);
-    return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[g].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">REGISTRO DOCENTE · BLOQUE 0${g + 5}</div><h1 id="create-title" tabindex="-1">${GROUPS[g].title}: ¿qué crearon y cómo?</h1></div></div><p class="objective">Escucha las tres creaciones del bloque, revisa lo que pedía cada reto y registra lo que observaste durante el proceso. La app no califica: tú decides.</p>
+    return `<div class="exercise-top"><a class="back-link" href="#crear">← Todos los retos de creación</a><span class="pill">${GROUPS[g].title}</span></div><div class="exercise-heading"><div><div class="eyebrow">REGISTRO DOCENTE · BLOQUE 0${g + 5}</div><h1 id="create-title" tabindex="-1">${GROUPS[g].title}: ¿qué crearon y cómo?</h1></div></div><p class="objective">Escucha las creaciones del bloque, revisa lo que pedía cada reto y registra lo que observaste durante el proceso. La app no califica: tú decides.</p>
 ${list.map((r, j) => { const c = rec(r.id); return `<section class="panel review-reto"><div class="review-head"><div><div class="panel-label">RETO ${j + 1} · ${escapeHTML(r.title.toUpperCase())}</div><h3>${c.title.trim() ? "«" + escapeHTML(c.title.trim()) + "»" : "Sin nombre"}</h3></div><div class="actions"><button type="button" class="secondary" data-listen="${r.id}" ${notesUsed(r, c) ? "" : "disabled"}>▶ Escuchar</button><button type="button" class="ghost" data-reto="${r.id}">Abrir reto ↗</button></div></div>${notesUsed(r, c) ? `<pre class="mini-notation">${escapeHTML(notation(r, c))}</pre>` : '<p class="small">Este reto todavía no tiene creación.</p>'}<div class="criteria"><b>Lo que pedía el reto</b> <span class="small">· tú decides si se logró</span><ul>${r.checks(c.pattern, c).map((x) => `<li>${x.text}</li>`).join("")}</ul></div><details><summary>Qué observar</summary><div class="reference">${r.observe}</div></details></section>`; }).join("")}
 <section class="panel teacher-panel"><div class="panel-label">REGISTRO DEL UNIVERSITARIO</div><form id="c-form" novalidate><label class="applied-check"><input type="checkbox" id="c-applied" ${v.applied ? "checked" : ""}> Un estudiante de colegio realizó los retos de este bloque en la app con mi guía.</label><div class="observation-questions">${Object.keys(CREATE_QUESTIONS).map((k) => q(k, v)).join("")}</div><div class="form-columns"><label for="c-observed">¿Qué observaste en el proceso? <span class="optional">· justificación breve requerida</span><textarea id="c-observed" maxlength="800" rows="4" placeholder="Cómo exploró, qué decidió, qué cambió después de escuchar, cómo explicó sus creaciones…">${escapeHTML(v.observed)}</textarea></label><label for="c-improve">¿Qué mejorarías? <span class="optional">· breve; si no propones cambios, indícalo</span><textarea id="c-improve" maxlength="800" rows="4" placeholder="Una pregunta guía, una restricción, más tiempo para explorar…">${escapeHTML(v.improve)}</textarea></label></div><div id="c-form-status" class="form-status" role="status">${evaluatedB(g) ? "Registro confirmado. Si cambias algo, vuelve a guardar para confirmar." : draftB(g) ? "Borrador recuperado. Completa y confirma tu registro." : "Completa las tres valoraciones y una observación breve."}</div><div class="actions"><button type="submit">Guardar registro</button><button type="button" id="c-save-next" class="secondary">${g < GROUPS.length - 1 ? "Guardar y pasar a " + GROUPS[g + 1].title.toLowerCase() + " →" : "Guardar y ver resultados →"}</button></div><p class="small" style="margin-top:13px">Si el escolar cambia una creación después de confirmar, el registro vuelve a borrador.</p></form></section>
 <div class="exercise-footer"><button class="ghost" data-reto="${list[list.length - 1].id}">← Último reto</button><span>Registro del bloque · <span id="c-status">${statusB(g)}</span></span>${g < GROUPS.length - 1 ? `<button class="secondary" data-reto="${blockRetos(g + 1)[0].id}">${GROUPS[g + 1].title} →</button>` : '<a href="#resultados" class="button">Ver resultados ↗</a>'}</div>`;
@@ -644,13 +686,13 @@ ${list.map((r, j) => { const c = rec(r.id); return `<section class="panel review
       const v = S()["_rev" + gi], list = createdList(gi);
       if (!list.length && !draftB(gi)) return "";
       const done = evaluatedB(gi);
-      return `<details class="result-item"><summary><span>${g.title} · ${list.length}/3 creaciones</span><span class="tag ${done ? "aqua" : "coral"}">${done ? "Confirmado" : "Borrador"}</span></summary>${list.map((r) => `<p><b>${r.title}</b>${S()[r.id].title.trim() ? " · «" + escapeHTML(S()[r.id].title.trim()) + "»" : ""}</p><pre class="mini-notation">${escapeHTML(notation(r, S()[r.id]))}</pre>`).join("")}${v ? `<div class="tags"><span class="tag">Logro: ${escapeHTML(v.achievement || "Pendiente")}</span><span class="tag">Ayuda: ${escapeHTML(v.help || "Pendiente")}</span><span class="tag">App: ${escapeHTML(v.technology || "Pendiente")}</span></div><p><b>Qué observaste:</b> ${escapeHTML(v.observed || "Sin observación registrada.")}</p><p><b>Qué mejorarías:</b> ${escapeHTML(v.improve || "Sin propuesta registrada.")}</p>` : ""}<button class="secondary" data-open-rev="${gi}">Abrir registro del bloque ↗</button></details>`;
+      return `<details class="result-item"><summary><span>${g.title} · ${list.length}/${blockRetos(gi).length} creaciones</span><span class="tag ${done ? "aqua" : "coral"}">${done ? "Confirmado" : "Borrador"}</span></summary>${list.map((r) => `<p><b>${r.title}</b>${S()[r.id].title.trim() ? " · «" + escapeHTML(S()[r.id].title.trim()) + "»" : ""}</p><pre class="mini-notation">${escapeHTML(notation(r, S()[r.id]))}</pre>`).join("")}${v ? `<div class="tags"><span class="tag">Logro: ${escapeHTML(v.achievement || "Pendiente")}</span><span class="tag">Ayuda: ${escapeHTML(v.help || "Pendiente")}</span><span class="tag">App: ${escapeHTML(v.technology || "Pendiente")}</span></div><p><b>Qué observaste:</b> ${escapeHTML(v.observed || "Sin observación registrada.")}</p><p><b>Qué mejorarías:</b> ${escapeHTML(v.improve || "Sin propuesta registrada.")}</p>` : ""}<button class="secondary" data-open-rev="${gi}">Abrir registro del bloque ↗</button></details>`;
     }).join("") || '<div class="empty">Aún no hay creaciones. Abre Crea tu música para empezar.</div>'}`;
   }
   function bindResults() { $$("[data-open-rev]").forEach((b) => b.addEventListener("click", () => navigate("crear-registro-" + b.dataset.openRev))); }
   function reportMarkup() {
     const s = summaryC();
-    return `<h2>Crea tu música</h2><p>Composiciones creadas por estudiantes de colegio en la app, con guía del universitario. ${s.evaluated} de 2 registros de bloque confirmados.</p><table><thead><tr><th>Bloque</th><th>Creaciones</th><th>Registro</th></tr></thead><tbody>${GROUPS.map((g, gi) => `<tr><td>${g.title}</td><td>${createdList(gi).length} de 3</td><td>${statusB(gi)}</td></tr>`).join("")}</tbody></table>${GROUPS.map((g, gi) => {
+    return `<h2>Crea tu música</h2><p>Composiciones creadas por estudiantes de colegio en la app, con guía del universitario. ${s.evaluated} de 2 registros de bloque confirmados.</p><table><thead><tr><th>Bloque</th><th>Creaciones</th><th>Registro</th></tr></thead><tbody>${GROUPS.map((g, gi) => `<tr><td>${g.title}</td><td>${createdList(gi).length} de ${blockRetos(gi).length}</td><td>${statusB(gi)}</td></tr>`).join("")}</tbody></table>${GROUPS.map((g, gi) => {
       const v = S()["_rev" + gi], list = createdList(gi);
       if (!list.length && !draftB(gi)) return "";
       return `<section class="report-exercise"><h3>${g.title}</h3>${list.map((r) => `<p><b>${r.title}</b>${S()[r.id].title.trim() ? " · «" + escapeHTML(S()[r.id].title.trim()) + "»" : ""} · ${S()[r.id].tempo} ppm</p><pre class="mini-notation">${escapeHTML(notation(r, S()[r.id]))}</pre>`).join("")}<p><b>¿Logró crear?</b> ${escapeHTML(v?.achievement || "Sin registrar")}<br><b>¿Necesitó ayuda?</b> ${escapeHTML(v?.help || "Sin registrar")}<br><b>¿La app facilitó?</b> ${escapeHTML(v?.technology || "Sin registrar")}</p><p><b>Qué observaste:</b>\n${escapeHTML(v?.observed.trim() || "Sin observación registrada.")}</p><p><b>Qué mejorarías:</b>\n${escapeHTML(v?.improve.trim() || "Sin propuesta registrada.")}</p></section>`;
@@ -662,7 +704,7 @@ ${list.map((r, j) => { const c = rec(r.id); return `<section class="panel review
     heading("Crea tu música");
     para("Composiciones creadas por estudiantes de colegio en la app, con guía del universitario. " + s.evaluated + " de 2 registros de bloque confirmados.", { size: 9 });
     row(["Bloque", "Creaciones", "Registro"], [80, 50, 44], { header: true });
-    GROUPS.forEach((g, gi) => row([g.title, createdList(gi).length + " de 3", statusB(gi)], [80, 50, 44]));
+    GROUPS.forEach((g, gi) => row([g.title, createdList(gi).length + " de " + blockRetos(gi).length, statusB(gi)], [80, 50, 44]));
     GROUPS.forEach((g, gi) => {
       const v = S()["_rev" + gi], list = createdList(gi);
       if (!list.length && !draftB(gi)) return;

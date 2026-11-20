@@ -120,3 +120,5 @@
 .guide-box{margin:18px 0 0;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:#101a2d}
 .guide-box summary{cursor:pointer;font-weight:800;font-size:15px}
 #create-view .exercise-footer .teacher-toggle{font-size:15px}
+.guide-btn{color:#ffd480;border-color:#9a7d45}.guide-btn[aria-pressed="true"]{background:#3a3020;border-color:#ffd480;color:#ffd480;box-shadow:0 0 14px #ffd48044}
+.seq-cell.drum-tparche[aria-pressed="true"]{background:var(--coral);border-color:var(--coral);box-shadow:0 0 12px #ffab9566}.seq-cell.drum-tpalito[aria-pressed="true"]{background:#ffd480;border-color:#ffd480;box-shadow:0 0 12px #ffd48055}
