@@ -7,8 +7,8 @@ Plataforma estática de experimentación musical y observación pedagógica para
 1. Selecciona uno de los 12 ejercicios.
 2. Escucha el ejemplo; repite o detén el audio cuando lo necesites.
 3. Aplica la consigna con estudiantes de colegio. La respuesta se realiza después de la escucha.
-4. Abre «Registro docente», marca que lo aplicaste, elige las tres valoraciones y escribe una justificación breve. Añade una propuesta de mejora si corresponde.
-5. Pulsa «Guardar valoración» o «Guardar y continuar».
+4. Repite con los 3 ejercicios del bloque sin detenerte a registrar.
+5. Al terminar el bloque, abre «Registro del bloque» (`#registro-bloque-1` a `#registro-bloque-4`): por cada ejercicio marca que lo aplicaste, elige las tres valoraciones y escribe una justificación breve. Pulsa «Guardar valoración» en cada uno o «Guardar y seguir» para confirmar los tres y pasar al siguiente bloque.
 6. En «Resultados» escribe tu identificación y reflexión; descarga tu informe PDF.
 
 No se pide programar, usar IA ni crear nuevos recursos educativos. La aplicación trae las secuencias musicales. No graba audio o video, no pide micrófono/cámara y no evalúa interpretaciones. El universitario toma todas las decisiones de valoración mediante escucha y observación directa.
