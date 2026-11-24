@@ -5,6 +5,9 @@ const $$=(s,root=document)=>[...root.querySelectorAll(s)];
 const EX=window.TIC_EXERCISES;
 const BLOCKS=[{title:'Imitación rítmica',icon:'▥',short:'Imita ritmos'},{title:'Análisis rítmico',icon:'≋',short:'Analiza ritmos'},{title:'Imitación melódica',icon:'♫',short:'Imita melodías'},{title:'Análisis melódico',icon:'⌁',short:'Analiza melodías'}];
 const KEY='tic02-experience-v2';
+// Formulario de Google para opiniones de los profesores sobre la app. Si queda vacío, el botón no se muestra.
+const FEEDBACK_URL='https://docs.google.com/forms/d/e/1FAIpQLSc5cQfCGRExd3oMSFtw-Pk9-La98YmiB3tUH3wfSPsFckuhZQ/viewform';
+{const fb=document.getElementById('feedback-button');if(fb&&/^https:\/\//.test(FEEDBACK_URL)){fb.href=FEEDBACK_URL;fb.hidden=false;}}
 const CHOICES={achievement:['Sí','Parcialmente','No'],help:['No','Un poco','Mucha'],technology:['Sí, ayudó','No hubo diferencia evidente','Dificultó la actividad']};
 const QUESTIONS={achievement:'¿El escolar logró realizar el ejercicio?',help:'¿Necesitó ayuda?',technology:'¿La tecnología facilitó la actividad?'};
 const today=()=>{const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());return ['year','month','day'].map(t=>parts.find(p=>p.type===t).value).join('-');};

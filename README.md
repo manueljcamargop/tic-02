@@ -98,3 +98,7 @@ El historial de despliegues de GitHub Pages permite comprobar la versión public
 ## Créditos
 
 Audio: [Virtuosity Drums](https://github.com/sfzinstruments/virtuosity_drums) y [VCSL](https://github.com/sgossner/VCSL), CC0. Detalles en `assets/licenses/CREDITOS.md` y `sources.json`. Biblioteca PDF: [jsPDF](https://github.com/parallax/jsPDF), MIT; fuente Noto Sans, SIL OFL. Textos completos incluidos. Ver `VERIFICACION.md` para pruebas y límites.
+
+## Opiniones de los profesores
+
+Botón flotante «Opinar sobre la app» (abajo a la derecha, oculto en el informe e impresión) que abre en otra pestaña el Google Form «TIC · Opiniones sobre la app». El enlace se configura en `FEEDBACK_URL` al inicio de `app.js`; si queda vacío, el botón no aparece.
